@@ -38,9 +38,9 @@ export type NodeState = {
 
 const initialNodes: ExtendedNode[] = [
   {id: 'multiply1', type: 'multiply', position: { x: 150, y: 0 }, data: {}},
-  {id: 'value1', type: 'value', position: { x: -150, y: -50 }, data: { x: 4 }},
+  {id: 'value1', type: 'value', position: { x: -150, y: -100 }, data: { x: 4 }},
   {id: 'value2', type: 'value', position: { x: -150, y: 50 }, data: { x: 5 }},
-  {id: 'dense1', type: 'dense', position: { x: -150, y: 150 }, data: {units: 10, inputShape: [4]}},
+  {id: 'dense1', type: 'dense', position: { x: -150, y: 200 }, data: {units: 10, inputShape: [4, 4]}},
 ];
 
 const useNodeStore = create<NodeState>((set, get) => ({

@@ -18,8 +18,8 @@ export default function ValueNode({id, isConnectable}: NodeProps<ValueNodeData>)
   };
 
   return (
-    <Node title={"Value"} sourceHandles={["Out"]}>
-      <NodeField value={nodeData?.x} onChange={onChange} />
+    <Node title={"Value"} outputs={["Out"]} type={"data"}>
+      <NodeField name={"Value"} value={nodeData.x} onChange={onChange} />
     </Node>
   );
 }

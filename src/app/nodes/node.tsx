@@ -1,18 +1,24 @@
 import {useMemo} from "react";
 import {Handle, Position} from "reactflow";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronDown, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
 
+
+// Node
 interface NodeProps {
   children?: React.ReactNode;
   title?: string;
-  targetHandles?: string[];
-  sourceHandles?: string[];
+  type: string;
+  inputs?: string[];
+  outputs?: string[];
 }
 
 export default function Node({
   children,
   title,
-  targetHandles,
-  sourceHandles,
+  type,
+  inputs,
+  outputs,
 }: NodeProps) {
 
   function createHandles (labels: string[], type: "target" | "source", position: Position) {
@@ -25,10 +31,10 @@ export default function Node({
           position={position}
           id={`${type}${i}`}
           isConnectable={true}
-          style={{ top: `${50 + i * spacing}px`, width: 8, height: 8}}
+          style={{ top: `${44 + i * spacing}px`, width: 8, height: 8}}
         />
         <h1 className="text-xs absolute" style={{
-          top: `${42 + i * spacing}px`,
+          top: `${38 + i * spacing}px`,
           left: position === Position.Left ? 10 : undefined,
           right: position === Position.Right ? 10 : undefined,
           fontSize: 8,
@@ -42,53 +48,71 @@ export default function Node({
 
   const handles = useMemo(() => {
     const allHandles = [];
-    if (targetHandles !== undefined) {
-      allHandles.push(...createHandles(targetHandles, "target", Position.Left));
+    if (inputs !== undefined) {
+      allHandles.push(...createHandles(inputs, "target", Position.Left));
     }
-    if (sourceHandles !== undefined) {
-      allHandles.push(...createHandles(sourceHandles, "source", Position.Right));
+    if (outputs !== undefined) {
+      allHandles.push(...createHandles(outputs, "source", Position.Right));
     }
     return allHandles;
-  }, [targetHandles, sourceHandles]);
+  }, [inputs, outputs]);
+
+  const bg = type === "data" ? "bg-data" : "bg-layer";
 
   return (
-    <div className="flex flex-col w-48 rounded-lg shadow-lg overflow-hidden">
-      <div className="bg-gray-300 px-4 py-2 text-xs">
+    <div className="flex flex-col w-40 rounded-lg shadow-lg overflow-hidden">
+      <div className={`${bg} px-3 py-1.5 text-xs text-gray-200 flex justify-between items-center`}>
         {title}
+        <span className="opacity-20 transition-opacity duration-300 hover:opacity-100">
+          <FontAwesomeIcon icon={faQuestionCircle} />
+        </span>
       </div>
-      <div className="p-2 bg-white">
+      <div className="bg-white px-3 pt-8">
         {handles}
         {children}
+      </div>
+      <div className="flex justify-center bg-white h-3 items-center w-full py-2">
+        <div className={"w-full flex justify-center opacity-0 hover:opacity-100"}>
+          <FontAwesomeIcon icon={faChevronDown} width={10} className="nodrag"/>
+        </div>
       </div>
     </div>
   );
 }
 
+// Node Field
 interface NodeFieldProps {
   value: any;
+  name: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export function NodeField({value, onChange=()=>{}} : NodeFieldProps) {
+export function NodeField({value, name, onChange=()=>{}} : NodeFieldProps) {
   const type = typeof value;
   switch (type) {
     case 'number' || 'string':
       return (
-        <input
-          type={type}
-          value={value}
-          onChange={onChange}
-          className="nodrag text-xs w-2/3 h-full bg-transparent outline-none text-left"
-        />
+        <label className="flex items-start text-xs h-6 mb-2">
+          <span className="whitespace-nowrap mt-1 mr-1.5 text-xxs text-align-right">{name}:</span>
+          <input
+            type={type}
+            value={value}
+            onChange={onChange}
+            className="nodrag text-xs w-full h-full bg-transparent outline-none text-left px-1 border border-gray-200 rounded"
+          />
+        </label>
       );
     default:
       return (
-        <input
-          type="text"
-          value={value}
-          onChange={onChange}
-          className="nodrag text-xs w-1/2 h-full bg-transparent outline-none text-left"
-        />
+        <label className="flex items-start text-xs h-6 mb-2">
+          <span className="whitespace-nowrap mt-1 mr-1.5 text-xxs text-align-right">{name}:</span>
+          <input
+            type="text"
+            value={value}
+            onChange={onChange}
+            className="nodrag text-xs w-full h-full bg-transparent outline-none text-left px-1 border border-gray-200 rounded"
+          />
+        </label>
       );
   }
 }

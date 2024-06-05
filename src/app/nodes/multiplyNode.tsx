@@ -43,9 +43,9 @@ export default function MultiplyNode({id, isConnectable, data}: NodeProps<Multip
   }, [nodeData.a, nodeData.b]);
 
   return (
-    <Node title={"Multiply"} targetHandles={["A", "B"]} >
-      <div className="flex flex-col w-full h-12 justify-center items-center">
-        <h1 className="text-xs">{output}</h1>
+    <Node title={"Multiply"} inputs={["A", "B"]} type={"data"} >
+      <div className={`flex flex-col w-full h-full justify-center items-center -mt-2 mb-1.5`}>
+        <h1 className="text-xs">{output || "Undefined"}</h1>
       </div>
     </Node>
   );
