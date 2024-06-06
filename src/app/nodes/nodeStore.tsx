@@ -13,7 +13,7 @@ import {
   applyEdgeChanges,
 } from 'reactflow';
 import {ExtendedNode, ValueNodeData} from './nodeTypes';
-import {isValidConnection} from './nodeUtils';
+import {compileNodes, isValidConnection} from './nodeUtils';
 
 
 export type NodeState = {
@@ -41,22 +41,24 @@ const initialNodes: ExtendedNode[] = [
   {id: 'multiply1', type: 'multiply', position: { x: 150, y: 0 }, data: {}},
   {id: 'value1', type: 'value', position: { x: -150, y: -100 }, data: { x: 4 }},
   {id: 'value2', type: 'value', position: { x: -150, y: 50 }, data: { x: 5 }},
-  {id: 'dense1', type: 'denseLayer', position: { x: -150, y: 200 }, data: {units: 10, activation: 'relu', inputShape: [4, 4]}},
-  {id: 'dense2', type: 'denseLayer', position: { x: 50, y: 200 }, data: {units: 10, activation: 'relu', inputShape: [4, 4]}},
+  {id: 'dense1', type: 'denseLayer', position: { x: -150, y: 200 }, data: {units: 10, activation: 'ReLU', inputShape: [4, 4]}},
+  {id: 'dense2', type: 'denseLayer', position: { x: 50, y: 200 }, data: {units: 10, activation: 'ReLU', inputShape: [4, 4]}},
   {id: 'input1', type: 'inputLayer', position: { x: -350, y: 200 }, data: {shape: [4, 4]}},
+  {id: 'model1', type: 'model', position: { x: 250, y: 200 }, data: {optimizer: 'Adam', loss: 'MSE'}},
 ];
 
 const useNodeStore = create<NodeState>((set, get) => ({
-  compile: () => {
-    set({compiling: true});
-    const sorted = get().topoSort();
-    sorted.forEach(nodeId => {
-      const node = get().getNode(nodeId);
-      if (node && node.type === 'multiply') {
-        console.log("MULT");
-      }
-    });
-    set({compiling: false});
+  compile: async () => {
+    try {
+      set({ compiling: true });
+      const sorted = get().topoSort();
+      await compileNodes(sorted, get().nodes, get().edges);
+      console.log('Compilation complete:', get().nodes);
+    } catch (error) {
+      console.error('Compilation error:', error);
+    } finally {
+      set({ compiling: false });
+    }
   },
   run: () => {
     set({running: true});

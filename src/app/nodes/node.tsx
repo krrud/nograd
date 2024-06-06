@@ -21,7 +21,7 @@ export default function Node({
   outputs,
 }: NodeProps) {
 
-  const [showExtra, setShowExtra] = useState(true);
+  const [showExtra, setShowExtra] = useState(false);
 
   function createHandles (labels: string[], type: "target" | "source", position: Position) {
     const count = labels.length;
@@ -57,11 +57,16 @@ export default function Node({
     return allHandles;
   }, [inputs, outputs]);
 
-  const bgColor = type === "data" ? "bg-data" : "bg-layer";
+  const headerColors: { [key: string]: string } = {
+    data: "bg-data",
+    layer: "bg-layer",
+    model: "bg-model"
+  };
+  const headerColor = headerColors[type] || "bg-default";
 
   return (
     <div className="flex flex-col w-40 rounded-lg shadow-lg overflow-hidden">
-      <div className={`${bgColor} px-3 py-1.5 text-xs text-gray-200 flex justify-between items-center`}>
+      <div className={`${headerColor} px-3 py-1.5 text-xs text-gray-200 flex justify-between items-center`}>
         {title}
         <span className="opacity-20 hover:opacity-100">
           <FontAwesomeIcon icon={faQuestionCircle} />
@@ -105,7 +110,7 @@ export function NodeField({value, type, name, onChange=()=>{}, options, extra=fa
           <select
             value={value}
             onChange={onChange}
-            className="nodrag text-xs w-full h-full bg-transparent outline-none text-left px-1 border border-gray-100 rounded"
+            className="nodrag text-xs w-full h-full bg-transparent outline-none text-left px-1 border border-gray-100 rounded text-right"
           >
             {options?.map((option, index) => (
               <option key={index} value={option}>{option}</option>
@@ -119,14 +124,14 @@ export function NodeField({value, type, name, onChange=()=>{}, options, extra=fa
             type={inputType}
             value={value}
             onChange={onChange}
-            className="nodrag text-xs w-full h-full bg-transparent outline-none text-left px-1 border border-gray-100 rounded"
+            className="nodrag text-xs text-right w-full h-full bg-transparent outline-none px-1 border border-gray-100 rounded"
           />
         );
     }
   }
   return (
     <label className="flex items-start text-xs h-6 mb-2">
-      <span className="whitespace-nowrap mt-1 mr-1.5 text-xxs text-align-right">{name}:</span>
+      <span className="whitespace-nowrap mt-1 mr-1.5 text-xxs">{name}:</span>
       {field()}
     </label>
   );

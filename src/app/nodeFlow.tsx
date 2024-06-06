@@ -38,6 +38,7 @@ export default function NodeFlow() {
   );
 
   useEffect(() => {
+    console.log('Setting up TF backend');
     setupTfBackend();
   }, []);
 

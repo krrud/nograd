@@ -5,6 +5,7 @@ import ValueNode from './valueNode';
 import DenseNode from './layers/denseNode';
 import * as tf from '@tensorflow/tfjs';
 import InputNode from './layers/inputNode';
+import ModelNode from './models/modelNode';
 
 
 export interface BaseNodeData {
@@ -25,23 +26,33 @@ export interface DenseNodeData {
   units: number;
   activation: string;
   inputShape: number[];
-  output?: tf.layers.Layer;
+  output?: tf.SymbolicTensor;
 }
 
 export interface InputNodeData {
   shape: number[];
+  output?: tf.SymbolicTensor;
 }
 
-export type ExtendedNodeData = BaseNodeData | MultiplyNodeData | ValueNodeData | DenseNodeData | InputNodeData;
+export interface ModelNodeData {
+  optimizer: string;
+  loss: string;
+}
+
+export type ExtendedNodeData = BaseNodeData | MultiplyNodeData | ValueNodeData | DenseNodeData | InputNodeData | ModelNodeData;
+
+export type LayerNodeData = DenseNodeData | InputNodeData;
 
 export interface ExtendedNode extends Node<ExtendedNodeData> {
+  data: ExtendedNodeData;
   type: 
     'default' |
     'base' |
     'multiply' |
     'value' |
     'denseLayer' |
-    'inputLayer';
+    'inputLayer' |
+    'model';
 }
 
 export const nodeTypes = {
@@ -50,6 +61,7 @@ export const nodeTypes = {
   value: ValueNode,
   denseLayer: DenseNode,
   inputLayer: InputNode,
+  model: ModelNode,
 };
 
 

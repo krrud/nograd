@@ -62,41 +62,22 @@ class MultiHeadAttention extends tf.layers.Layer {
   call(inputs, training = false) {
     const [query, key, value] = inputs;
     const batchSize = query.shape[0];
-
+  
     // Linear transformations
-    let Q = tf.dot(query, this.Wq.read());
-    let K = tf.dot(key, this.Wk.read());
-    let V = tf.dot(value, this.Wv.read());
-
-    // Split into multiple heads
+    let Q = tf.matMul(query, this.Wq.read());
+    let K = tf.matMul(key, this.Wk.read());
+    let V = tf.matMul(value, this.Wv.read());
+  
+    // Split heads
     Q = this.splitHeads(Q, batchSize);
     K = this.splitHeads(K, batchSize);
     V = this.splitHeads(V, batchSize);
-
+  
     // Scaled dot-product attention
-    const attention = this.scaledDotProductAttention(Q, K, V);
-
-    // Concatenate heads
-    const concatenated = tf.transpose(attention, [0, 2, 1, 3]);
-    const reshaped = tf.reshape(concatenated, [batchSize, -1, this.dModel]);
-
+    const attentionHeads = this.scaledDotProductAttention(Q, K, V);
+    let attentionOutput = tf.reshape(attentionHeads, [batchSize, -1, this.dModel]);
+  
     // Final linear transformation
-    return tf.dot(reshaped, this.Wo.read());
+    return tf.matMul(attentionOutput, this.Wo.read());
   }
 }
-
-// Example usage
-const numHeads = 8;
-const dModel = 512;
-
-const inputs = tf.input({ shape: [10, 512] });
-const query = inputs;
-const key = inputs;
-const value = inputs;
-
-const multiHeadAttention = new MultiHeadAttention(numHeads, dModel);
-const output = multiHeadAttention.apply([query, key, value]);
-
-const model2 = tf.model({ inputs: inputs, outputs: output });
-model.summary();
-

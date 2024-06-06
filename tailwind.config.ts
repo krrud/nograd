@@ -18,7 +18,8 @@ const config: Config = {
       },
       backgroundColor: {
         "layer": "#589CBF",
-        "data": "#73BFB8"
+        "data": "#73BFB8",
+        "model": "#E85F5C",
       },
       fontSize: {
         "xxs": "0.5rem"
