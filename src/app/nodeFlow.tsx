@@ -9,7 +9,9 @@ import 'reactflow/dist/style.css';
 import {nodeTypes} from './nodes/nodeTypes';
 import useNodes, {NodeState} from './nodes/nodeStore';
 import {useShallow} from 'zustand/react/shallow';
-
+import { useEffect } from 'react';
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-webgpu';
 
 const selector = (state: NodeState) => ({
   nodes: state.nodes,
@@ -19,11 +21,25 @@ const selector = (state: NodeState) => ({
   onConnect: state.onConnect,
 });
 
+async function setupTfBackend() {
+  try{
+    await tf.setBackend('webgpu');    
+  } catch (e) {
+    console.error('WebGPU is not supported on this device:', e);
+  }
+  await tf.ready();
+  console.log(`Backend: ${tf.getBackend()}`); // TODO: remove
+};
+
 export default function NodeFlow() {
 
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useNodes(
     useShallow(selector),
   );
+
+  useEffect(() => {
+    setupTfBackend();
+  }, []);
 
   return (
     <ReactFlow

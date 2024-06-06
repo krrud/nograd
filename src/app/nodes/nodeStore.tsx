@@ -13,6 +13,7 @@ import {
   applyEdgeChanges,
 } from 'reactflow';
 import {ExtendedNode, ValueNodeData} from './nodeTypes';
+import {isValidConnection} from './nodeUtils';
 
 
 export type NodeState = {
@@ -40,7 +41,9 @@ const initialNodes: ExtendedNode[] = [
   {id: 'multiply1', type: 'multiply', position: { x: 150, y: 0 }, data: {}},
   {id: 'value1', type: 'value', position: { x: -150, y: -100 }, data: { x: 4 }},
   {id: 'value2', type: 'value', position: { x: -150, y: 50 }, data: { x: 5 }},
-  {id: 'dense1', type: 'dense', position: { x: -150, y: 200 }, data: {units: 10, inputShape: [4, 4]}},
+  {id: 'dense1', type: 'denseLayer', position: { x: -150, y: 200 }, data: {units: 10, activation: 'relu', inputShape: [4, 4]}},
+  {id: 'dense2', type: 'denseLayer', position: { x: 50, y: 200 }, data: {units: 10, activation: 'relu', inputShape: [4, 4]}},
+  {id: 'input1', type: 'inputLayer', position: { x: -350, y: 200 }, data: {shape: [4, 4]}},
 ];
 
 const useNodeStore = create<NodeState>((set, get) => ({
@@ -203,24 +206,3 @@ const useNodeStore = create<NodeState>((set, get) => ({
 }));
 
 export default useNodeStore;
-
-
-
-// utility functions
-function isValidConnection(sourceNode?: ExtendedNode, targetNode?: ExtendedNode) {
-  if (!sourceNode || !targetNode) return false;
-  let valid = false;
-  switch (targetNode.type) {
-    case 'multiply':
-      valid = sourceNode.type === 'value';
-      break;
-    case 'dense':
-      break;
-    case 'value':
-      valid = sourceNode.type === 'value';
-      break;
-    default:
-      valid = false;
-  }
-  return valid;
-}

@@ -8,18 +8,16 @@ export function isValueNodeData(data: any): data is ValueNodeData {
   return data !== undefined && typeof data.x === 'number';
 }
 
-export default function ValueNode({id, isConnectable}: NodeProps<ValueNodeData>) {
-  const node = useNodes(state => state.getNode(id));
-  const nodeData = node && isValueNodeData(node.data) ? node.data : {x: 0};
+export default function ValueNode({id, isConnectable, data}: NodeProps<ValueNodeData>) {
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const value = parseFloat(e.target.value);
     useNodes.getState().updateNode(id, {x: value});
   };
 
   return (
     <Node title={"Value"} outputs={["Out"]} type={"data"}>
-      <NodeField name={"Value"} value={nodeData.x} onChange={onChange} />
+      <NodeField name={"Value"} value={data.x} type={"number"} onChange={onChange} />
     </Node>
   );
 }

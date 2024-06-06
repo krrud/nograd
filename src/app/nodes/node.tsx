@@ -1,8 +1,8 @@
-import {useMemo} from "react";
+import React, {useMemo, useState} from "react";
 import {Handle, Position} from "reactflow";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
-
+import { faChevronDown, faChevronUp, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+import Select from 'react-select'
 
 // Node
 interface NodeProps {
@@ -21,6 +21,8 @@ export default function Node({
   outputs,
 }: NodeProps) {
 
+  const [showExtra, setShowExtra] = useState(true);
+
   function createHandles (labels: string[], type: "target" | "source", position: Position) {
     const count = labels.length;
     const spacing = 24;
@@ -33,16 +35,14 @@ export default function Node({
           isConnectable={true}
           style={{ top: `${44 + i * spacing}px`, width: 8, height: 8}}
         />
-        <h1 className="text-xs absolute" style={{
-          top: `${38 + i * spacing}px`,
-          left: position === Position.Left ? 10 : undefined,
-          right: position === Position.Right ? 10 : undefined,
-          fontSize: 8,
+        <h1 className="text-xxs absolute" style={{
+          top: `${39 + i * spacing}px`,
+          left: position === Position.Left ? 12 : undefined,
+          right: position === Position.Right ? 14 : undefined,
         }}>
           {labels[i]} 
         </h1>
       </div>
-
     ));
   };
 
@@ -57,23 +57,29 @@ export default function Node({
     return allHandles;
   }, [inputs, outputs]);
 
-  const bg = type === "data" ? "bg-data" : "bg-layer";
+  const bgColor = type === "data" ? "bg-data" : "bg-layer";
 
   return (
     <div className="flex flex-col w-40 rounded-lg shadow-lg overflow-hidden">
-      <div className={`${bg} px-3 py-1.5 text-xs text-gray-200 flex justify-between items-center`}>
+      <div className={`${bgColor} px-3 py-1.5 text-xs text-gray-200 flex justify-between items-center`}>
         {title}
-        <span className="opacity-20 transition-opacity duration-300 hover:opacity-100">
+        <span className="opacity-20 hover:opacity-100">
           <FontAwesomeIcon icon={faQuestionCircle} />
         </span>
       </div>
       <div className="bg-white px-3 pt-8">
         {handles}
-        {children}
+        {React.Children.map(children, (child, index) => {
+        if (React.isValidElement(child)) {
+          if (child.props.extra && !showExtra) return null;
+          return <div key={index}>{child}</div>;
+        }
+        return null;
+      })}
       </div>
       <div className="flex justify-center bg-white h-3 items-center w-full py-2">
-        <div className={"w-full flex justify-center opacity-0 hover:opacity-100"}>
-          <FontAwesomeIcon icon={faChevronDown} width={10} className="nodrag"/>
+        <div className={"w-full flex justify-center opacity-0 hover:opacity-100"} onClick={()=>setShowExtra(!showExtra)}>
+          <FontAwesomeIcon icon={showExtra ? faChevronUp : faChevronDown} width={10} className="nodrag"/>
         </div>
       </div>
     </div>
@@ -83,36 +89,45 @@ export default function Node({
 // Node Field
 interface NodeFieldProps {
   value: any;
+  type?: string;
   name: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  options?: string[];
+  extra?: boolean;
 }
 
-export function NodeField({value, name, onChange=()=>{}} : NodeFieldProps) {
-  const type = typeof value;
-  switch (type) {
-    case 'number' || 'string':
-      return (
-        <label className="flex items-start text-xs h-6 mb-2">
-          <span className="whitespace-nowrap mt-1 mr-1.5 text-xxs text-align-right">{name}:</span>
-          <input
-            type={type}
+export function NodeField({value, type, name, onChange=()=>{}, options, extra=false} : NodeFieldProps) {
+  const inputType = type || typeof value || "text";
+  function field() {
+    switch (inputType) {
+      case "select":
+        return (
+          <select
             value={value}
             onChange={onChange}
-            className="nodrag text-xs w-full h-full bg-transparent outline-none text-left px-1 border border-gray-200 rounded"
-          />
-        </label>
-      );
-    default:
-      return (
-        <label className="flex items-start text-xs h-6 mb-2">
-          <span className="whitespace-nowrap mt-1 mr-1.5 text-xxs text-align-right">{name}:</span>
+            className="nodrag text-xs w-full h-full bg-transparent outline-none text-left px-1 border border-gray-100 rounded"
+          >
+            {options?.map((option, index) => (
+              <option key={index} value={option}>{option}</option>
+            ))}
+          </select>
+          // <Select value ={value}options={options}/> // TODO: Implement react-select(?)
+        );
+      default:
+        return (
           <input
-            type="text"
+            type={inputType}
             value={value}
             onChange={onChange}
-            className="nodrag text-xs w-full h-full bg-transparent outline-none text-left px-1 border border-gray-200 rounded"
+            className="nodrag text-xs w-full h-full bg-transparent outline-none text-left px-1 border border-gray-100 rounded"
           />
-        </label>
-      );
+        );
+    }
   }
+  return (
+    <label className="flex items-start text-xs h-6 mb-2">
+      <span className="whitespace-nowrap mt-1 mr-1.5 text-xxs text-align-right">{name}:</span>
+      {field()}
+    </label>
+  );
 }

@@ -4,6 +4,7 @@ import MultiplyNode from './multiplyNode';
 import ValueNode from './valueNode';
 import DenseNode from './layers/denseNode';
 import * as tf from '@tensorflow/tfjs';
+import InputNode from './layers/inputNode';
 
 
 export interface BaseNodeData {
@@ -22,11 +23,16 @@ export interface ValueNodeData {
 
 export interface DenseNodeData {
   units: number;
+  activation: string;
   inputShape: number[];
   output?: tf.layers.Layer;
 }
 
-export type ExtendedNodeData = BaseNodeData | MultiplyNodeData | ValueNodeData | DenseNodeData;
+export interface InputNodeData {
+  shape: number[];
+}
+
+export type ExtendedNodeData = BaseNodeData | MultiplyNodeData | ValueNodeData | DenseNodeData | InputNodeData;
 
 export interface ExtendedNode extends Node<ExtendedNodeData> {
   type: 
@@ -34,17 +40,17 @@ export interface ExtendedNode extends Node<ExtendedNodeData> {
     'base' |
     'multiply' |
     'value' |
-    'dense';
+    'denseLayer' |
+    'inputLayer';
 }
 
 export const nodeTypes = {
   base: BaseNode, 
   multiply: MultiplyNode,
   value: ValueNode,
-  dense: DenseNode,
+  denseLayer: DenseNode,
+  inputLayer: InputNode,
 };
-
-
 
 
 // base node
