@@ -1,7 +1,7 @@
 import {NodeProps} from 'reactflow';
-import {ValueNodeData} from './nodeTypes';
-import useNodes from './nodeStore';
-import Node, { NodeField } from './node';
+import {ValueNodeData} from '@/app/nodes/nodeTypes';
+import useNodes from '@/app/nodes/nodeStore';
+import Node, { NodeField } from '@/app/nodes/node';
 
 
 export function isValueNodeData(data: any): data is ValueNodeData {

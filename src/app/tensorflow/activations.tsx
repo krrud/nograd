@@ -36,4 +36,9 @@ export const activations: Record<string, string> = {
   "Softmax": "softmax",
   "Tanh": "tanh",
 };
+
 export const validActivations = Object.keys(activations);
+
+export function validActivation(value: string): value is keyof typeof activations {
+  return validActivations.includes(value);
+}

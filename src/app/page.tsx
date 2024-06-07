@@ -1,4 +1,4 @@
-import NodeFlow from './nodeFlow';
+import NodeFlow from '@/app/nodes/nodeFlow';
 
 
 export default function Home() {

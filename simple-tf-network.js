@@ -24,6 +24,24 @@ model.compile({
 // Log the summary of the model to see the structure
 model.summary();
 
+// Generate random input data and one-hot encoded labels
+const numExamples = 100;
+const xs = tf.randomNormal([numEntries, 10]);
+const labels = tf.tidy(() => tf.oneHot(tf.util.createShuffledIndices(numExamples).map(i => i % 10), 10));
+
+model.fit(xs, labels, {
+  epochs: 10,
+  callbacks: {
+    onEpochEnd: (epoch, logs) => {
+      console.log(`Epoch ${epoch + 1}: Loss = ${logs.loss}, Accuracy = ${logs.acc}`);
+    }
+  }
+}).then(info => {
+  console.log('Training finished', info);
+}).catch(err => {
+  console.error('Error during training', err);
+});
+
 
 
 // MULTI HEAD ATTN

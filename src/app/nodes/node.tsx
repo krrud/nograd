@@ -64,6 +64,13 @@ export default function Node({
   };
   const headerColor = headerColors[type] || "bg-default";
 
+  const hasExtra = React.Children.toArray(children).some((child) => {
+    if (React.isValidElement(child)) {
+      return child.props.extra;
+    }
+    return false;
+  });
+
   return (
     <div className="flex flex-col w-40 rounded-lg shadow-lg overflow-hidden">
       <div className={`${headerColor} px-3 py-1.5 text-xs text-gray-200 flex justify-between items-center`}>
@@ -72,7 +79,7 @@ export default function Node({
           <FontAwesomeIcon icon={faQuestionCircle} />
         </span>
       </div>
-      <div className="bg-white px-3 pt-8">
+      <div className="bg-white px-3 pt-8 pb-1">
         {handles}
         {React.Children.map(children, (child, index) => {
         if (React.isValidElement(child)) {
@@ -82,11 +89,15 @@ export default function Node({
         return null;
       })}
       </div>
-      <div className="flex justify-center bg-white h-3 items-center w-full py-2">
-        <div className={"w-full flex justify-center opacity-0 hover:opacity-100"} onClick={()=>setShowExtra(!showExtra)}>
-          <FontAwesomeIcon icon={showExtra ? faChevronUp : faChevronDown} width={10} className="nodrag"/>
+      {hasExtra && (
+        <div className="flex justify-center bg-white items-center w-full pt-1 pb-2">
+          <div className="flex justify-center w-full">
+            <h1 className="text-xxs text-gray-500 px-4 py-0 hover:cursor-pointer" onClick={() => setShowExtra(!showExtra)}>
+              {showExtra ? "less" : "more"}
+            </h1>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -102,7 +113,7 @@ interface NodeFieldProps {
 }
 
 export function NodeField({value, type, name, onChange=()=>{}, options, extra=false} : NodeFieldProps) {
-  const inputType = type || typeof value || "text";
+  let inputType = type || typeof value || "text";
   function field() {
     switch (inputType) {
       case "select":

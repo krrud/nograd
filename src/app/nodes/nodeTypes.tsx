@@ -1,11 +1,11 @@
 import React from 'react';
 import {Node, NodeProps} from "reactflow";
-import MultiplyNode from './multiplyNode';
-import ValueNode from './valueNode';
-import DenseNode from './layers/denseNode';
+import MultiplyNode from '@/app/nodes/test/multiplyNode';
+import ValueNode from '@/app/nodes/test/valueNode';
+import DenseNode from '@/app/nodes/layers/denseNode';
 import * as tf from '@tensorflow/tfjs';
-import InputNode from './layers/inputNode';
-import ModelNode from './models/modelNode';
+import InputNode from '@/app/nodes/layers/inputNode';
+import ModelNode from '@/app/nodes/models/modelNode';
 
 
 export interface BaseNodeData {

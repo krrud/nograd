@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {NodeProps, Handle, Position} from 'reactflow';
-import {ExtendedNode, MultiplyNodeData} from './nodeTypes';
-import useNodes from './nodeStore';
-import { isValueNodeData } from './valueNode';
-import Node from './node';
-import * as tf from '@tensorflow/tfjs';
+import {ExtendedNode, MultiplyNodeData} from '@/app/nodes/nodeTypes';
+import useNodes from '@/app/nodes/nodeStore';
+import { isValueNodeData } from '@/app/nodes/test/valueNode';
+import Node from '@/app/nodes/node';
+
 
 export function isMultiplyNodeData(data: any): data is MultiplyNodeData {
   return data !== undefined && typeof data.a === 'number' && typeof data.b === 'number';

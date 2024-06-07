@@ -12,12 +12,22 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
 } from 'reactflow';
-import {ExtendedNode, ValueNodeData} from './nodeTypes';
-import {compileNodes, isValidConnection} from './nodeUtils';
+import {ExtendedNode, ValueNodeData} from '@/app/nodes/nodeTypes';
+import {compileNodes, getAllConnectedNodes, isValidConnection, topoSort} from '@/app/nodes/nodeUtils';
 
+
+const initialNodes: ExtendedNode[] = [
+  {id: 'multiply1', type: 'multiply', position: { x: 150, y: 0 }, data: {}},
+  {id: 'value1', type: 'value', position: { x: -150, y: -100 }, data: { x: 4 }},
+  {id: 'value2', type: 'value', position: { x: -150, y: 50 }, data: { x: 5 }},
+  {id: 'dense1', type: 'denseLayer', position: { x: -150, y: 200 }, data: {units: 10, activation: 'ReLU', inputShape: [4, 4]}},
+  {id: 'dense2', type: 'denseLayer', position: { x: 50, y: 200 }, data: {units: 10, activation: 'ReLU', inputShape: [4, 4]}},
+  {id: 'input1', type: 'inputLayer', position: { x: -350, y: 200 }, data: {shape: [4, 4]}},
+  {id: 'model1', type: 'model', position: { x: 250, y: 200 }, data: {optimizer: 'Adam', loss: 'MSE'}},
+];
 
 export type NodeState = {
-  compile: () => void;
+  compile: (nodes?: ExtendedNode[]) => Promise<boolean>;
   run: () => void;
   compiling: boolean;
   running: boolean;
@@ -34,30 +44,24 @@ export type NodeState = {
   updateNode: (nodeId: string, data: {}) => void;
   getNode: (nodeId: string) => ExtendedNode | undefined;
   getInputEdges: (nodeId: string) => { source: string; sourceHandle: string | null | undefined; }[];
-  topoSort: () => string[];
+  getAllConnectedNodes: (nodeId: string) => ExtendedNode[];
 };
 
-const initialNodes: ExtendedNode[] = [
-  {id: 'multiply1', type: 'multiply', position: { x: 150, y: 0 }, data: {}},
-  {id: 'value1', type: 'value', position: { x: -150, y: -100 }, data: { x: 4 }},
-  {id: 'value2', type: 'value', position: { x: -150, y: 50 }, data: { x: 5 }},
-  {id: 'dense1', type: 'denseLayer', position: { x: -150, y: 200 }, data: {units: 10, activation: 'ReLU', inputShape: [4, 4]}},
-  {id: 'dense2', type: 'denseLayer', position: { x: 50, y: 200 }, data: {units: 10, activation: 'ReLU', inputShape: [4, 4]}},
-  {id: 'input1', type: 'inputLayer', position: { x: -350, y: 200 }, data: {shape: [4, 4]}},
-  {id: 'model1', type: 'model', position: { x: 250, y: 200 }, data: {optimizer: 'Adam', loss: 'MSE'}},
-];
-
 const useNodeStore = create<NodeState>((set, get) => ({
-  compile: async () => {
+  compile: async (nodes=get().nodes) => {
+    let result = false;
     try {
       set({ compiling: true });
-      const sorted = get().topoSort();
-      await compileNodes(sorted, get().nodes, get().edges);
-      console.log('Compilation complete:', get().nodes);
+      const sorted = topoSort(nodes);
+      await compileNodes(sorted);
+      result = true;
+      console.log('Compilation complete');
     } catch (error) {
       console.error('Compilation error:', error);
+      result = false;
     } finally {
-      set({ compiling: false });
+      set({compiling: false});
+      return result;
     }
   },
   run: () => {
@@ -122,15 +126,6 @@ const useNodeStore = create<NodeState>((set, get) => ({
     set({
       edges: addEdge(connection, filteredEdges),
     });
-
-    // update the target node data if applicable
-    const sourceNode = get().nodes.find(n => n.id === source);
-    if (sourceNode && 'x' in sourceNode.data && (targetHandle === 'a' || targetHandle === 'b')) {
-      const updatedValue = (sourceNode.data as ValueNodeData).x;
-      if (updatedValue !== undefined) {
-        get().updateNode(target, { [targetHandle]: updatedValue });
-      }
-    }
   },
   setNodes: (nodes: ExtendedNode[]) => {
     set({ nodes });
@@ -168,43 +163,9 @@ const useNodeStore = create<NodeState>((set, get) => ({
 
     return inputs;
   },
-  topoSort: () => {
-    const nodes = get().nodes;
-    const edges = get().edges;
-    const inDegree = new Map<string, number>();
-    const adjList = new Map<string, string[]>();
-    const sorted: string[] = [];
-    const queue: string[] = [];
-
-    nodes.forEach(node => {
-      inDegree.set(node.id, 0);
-      adjList.set(node.id, []);
-    });
-  
-    edges.forEach(edge => {
-      inDegree.set(edge.target, inDegree.get(edge.target)! + 1);
-      adjList.set(edge.source, [...adjList.get(edge.source)!, edge.target]);
-    });
-
-    inDegree.forEach((degree, node) => {
-      if (degree === 0) {
-        queue.push(node);
-      }
-    });
-
-    while (queue.length > 0) {
-      const node = queue.shift()!;
-      sorted.push(node);
-      adjList.get(node)!.forEach(neighbor => {
-        inDegree.set(neighbor, inDegree.get(neighbor)! - 1);
-        if (inDegree.get(neighbor) === 0) {
-          queue.push(neighbor);
-        }
-      });
-    }
-  
-    return sorted;
-  },
+  getAllConnectedNodes: (nodeId: string) => {
+    return getAllConnectedNodes(nodeId);
+  }
 }));
 
 export default useNodeStore;

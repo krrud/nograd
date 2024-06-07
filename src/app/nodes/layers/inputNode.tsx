@@ -8,7 +8,9 @@ import * as tf from '@tensorflow/tfjs';
 
 
 export default function InputNode({ id, isConnectable, data }: NodeProps<InputNodeData>) {
-  const [shape, setShape] = useState<string>(data.shape.toString()); // use join to get space separated string
+  const state = useNodes.getState();
+  const [shape, setShape] = useState<string>(data.shape.join(", "));
+  const [fileContent, setFileContent] = useState<string | ArrayBuffer | null>(null);
 
   const onChangeShape = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (!isValidShapeInput(e.target.value)) return;
@@ -17,12 +19,26 @@ export default function InputNode({ id, isConnectable, data }: NodeProps<InputNo
       .split(',')
       .map(v => parseInt(v.trim(), 10))
       .filter(v => !isNaN(v));
-    useNodes.getState().updateNode(id, {shape: newShape});
+    state.updateNode(id, {shape: newShape});
+  };
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFileContent(reader.result);
+        const fileSize = file.size;
+        console.log(fileSize);
+      };
+      reader.readAsText(file); // You can also use readAsArrayBuffer, readAsBinaryString, readAsDataURL based on your requirement
+    }
   };
   
   return (
     <Node title={"Input"} outputs={["Out"]} type={"layer"}>
       <NodeField name={"Shape"} value={shape} onChange={onChangeShape}/>
+      <input type="file" onChange={onFileChange} className="text-xxs mb-2"/>
     </Node>
   );
 }

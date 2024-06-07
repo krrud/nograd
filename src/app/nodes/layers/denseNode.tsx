@@ -1,27 +1,28 @@
 import React, {use, useState} from 'react';
 import { Edge, NodeProps} from 'reactflow';
-import {DenseNodeData, ExtendedNode, ExtendedNodeData, InputNodeData, LayerNodeData} from '../nodeTypes';
-import useNodes from '../nodeStore';
-import Node, {NodeField} from '../node';
-import {ActivationIdentifier, activations, validActivations} from '@/app/tensorflow/activation';
+import {DenseNodeData, ExtendedNode, ExtendedNodeData, InputNodeData, LayerNodeData} from '@/app/nodes/nodeTypes';
+import useNodes from '@/app/nodes/nodeStore';
+import Node, {NodeField} from '@/app/nodes/node';
+import {ActivationIdentifier, activations, validActivation} from '@/app/tensorflow/activations';
 import {isValidShapeInput} from '../nodeUtils';
 import * as tf from '@tensorflow/tfjs';
-import { isInputNodeData } from './inputNode';
+import { isInputNodeData } from '@/app/nodes/layers/inputNode';
 
 
 export default function DenseNode({ id, isConnectable, data }: NodeProps<DenseNodeData>) {
-  const [inputShape, setInputShape] = useState<string>(data.inputShape.toString());
+  const state = useNodes.getState();
+  const [inputShape, setInputShape] = useState<string>(data.inputShape.join(', '));
   const [activation, setActivation] = useState<string>(data.activation);
   
   const onChangeUnits = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const value = parseFloat(e.target.value);
-    useNodes.getState().updateNode(id, {units: value});
+    state.updateNode(id, {units: value});
   };
 
   const onChangeActivation = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setActivation(e.target.value);
-    if (e.target.value in activations){
-      useNodes.getState().updateNode(id, {activation: e.target.value});
+    if (validActivation(e.target.value)){
+      state.updateNode(id, {activation: e.target.value});
     };
   }
   
@@ -32,7 +33,7 @@ export default function DenseNode({ id, isConnectable, data }: NodeProps<DenseNo
       .split(',')
       .map(v => parseInt(v.trim(), 10))
       .filter(v => !isNaN(v));
-    useNodes.getState().updateNode(id, {inputShape: values});
+    state.updateNode(id, {inputShape: values});
   };
 
   return (
@@ -51,7 +52,7 @@ export default function DenseNode({ id, isConnectable, data }: NodeProps<DenseNo
 
 export async function compileDenseNode(node: ExtendedNode) {
   console.log("Compiling Dense Node: ", node.id);
-
+  const state = useNodes.getState();
   try {
     if (node.type === 'denseLayer' && isDenseNodeData(node.data)) {
       const activation = activations[node.data.activation] as ActivationIdentifier;
@@ -60,12 +61,12 @@ export async function compileDenseNode(node: ExtendedNode) {
         activation: activation,
       });
       console.log("Activation: ", node.data.activation);
-      const inputs = useNodes.getState().getInputEdges(node.id);
+      const inputs = state.getInputEdges(node.id);
       if (inputs.length === 0) {
         throw new Error("No inputs connected to the node.");
       }
 
-      const inputNode = useNodes.getState().getNode(inputs[0].source);
+      const inputNode = state.getNode(inputs[0].source);
       if (!inputNode || !isValidInputNode(inputNode)) {
         throw new Error("Invalid or missing input node.");
       };
@@ -77,12 +78,12 @@ export async function compileDenseNode(node: ExtendedNode) {
       }
 
       const output = layer.apply(inputValue);
-      useNodes.getState().updateNode(node.id, {output});
+      state.updateNode(node.id, {output});
     } else {
       throw new Error('Invalid node type or data for compiling a dense layer');
     }
   } catch (error) {
-    useNodes.getState().updateNode(node.id, {output: undefined});
+    state.updateNode(node.id, {output: undefined});
   }
 }
 

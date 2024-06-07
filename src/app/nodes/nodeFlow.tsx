@@ -6,8 +6,8 @@ import ReactFlow, {
   Background,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import {nodeTypes} from './nodes/nodeTypes';
-import useNodes, {NodeState} from './nodes/nodeStore';
+import {nodeTypes} from '@/app/nodes/nodeTypes';
+import useNodes, {NodeState} from '@/app/nodes/nodeStore';
 import {useShallow} from 'zustand/react/shallow';
 import { useEffect } from 'react';
 import * as tf from '@tensorflow/tfjs';
@@ -33,7 +33,7 @@ async function setupTfBackend() {
 
 export default function NodeFlow() {
 
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useNodes(
+  const {nodes, edges, onNodesChange, onEdgesChange, onConnect} = useNodes(
     useShallow(selector),
   );
 
@@ -41,6 +41,8 @@ export default function NodeFlow() {
     console.log('Setting up TF backend');
     setupTfBackend();
   }, []);
+
+  // listener for
 
   return (
     <ReactFlow
