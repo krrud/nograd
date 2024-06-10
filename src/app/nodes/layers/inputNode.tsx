@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import { NodeProps} from 'reactflow';
 import {ExtendedNode, InputNodeData} from '../nodeTypes';
 import useNodes from '../nodeStore';
@@ -11,6 +11,9 @@ export default function InputNode({ id, isConnectable, data }: NodeProps<InputNo
   const state = useNodes.getState();
   const [shape, setShape] = useState<string>(data.shape.join(", "));
   const [fileContent, setFileContent] = useState<string | ArrayBuffer | null>(null);
+  const errors = useMemo(() => {
+    return data.errors ? data.errors : undefined;
+  }, [data.errors]);
 
   const onChangeShape = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (!isValidShapeInput(e.target.value)) return;
@@ -31,12 +34,12 @@ export default function InputNode({ id, isConnectable, data }: NodeProps<InputNo
         const fileSize = file.size;
         console.log(fileSize);
       };
-      reader.readAsText(file); // You can also use readAsArrayBuffer, readAsBinaryString, readAsDataURL based on your requirement
+      reader.readAsText(file); // readAsArrayBuffer, readAsBinaryString, readAsDataURL
     }
   };
   
   return (
-    <Node title={"Input"} outputs={["Out"]} type={"layer"}>
+    <Node title={"Input Layer"} outputs={["Out"]} type={"layer"} errors={errors}>
       <NodeField name={"Shape"} value={shape} onChange={onChangeShape}/>
       <input type="file" onChange={onFileChange} className="text-xxs mb-2"/>
     </Node>

@@ -52,44 +52,50 @@ export function isValidConnection(sourceNode?: ExtendedNode, targetNode?: Extend
 }
 
 export async function compileNodes(sorted: string[]) {
-  const nodes = useNodes.getState().nodes;
+  const state = useNodes.getState()
+  type NodeMap = Record<string, ExtendedNode>;
+  const nodeMap = state.nodes.reduce((acc: NodeMap, node: ExtendedNode) => {
+    acc[node.id] = node;
+    return acc;
+  }, {});
+  const compilers: {[key: string]: (node: ExtendedNode) => Promise<void>} = {
+    denseLayer: compileDenseNode,
+    inputLayer: compileInputNode,
+    model: compileModelNode,
+  }
   for (const nodeId of sorted) {
-    const node = nodes.find(n => n.id === nodeId);
+    const node = nodeMap[nodeId];
     if (!node) continue;
-    try {
-      switch (node.type) {
-        case 'denseLayer':
-          await compileDenseNode(node);
-          break;
-        case 'inputLayer':
-          await compileInputNode(node);
-          break;
-        case 'model':
-          await compileModelNode(node);
-          break;
-        case 'value':
-        case 'multiply':
-          console.log('No compilation needed for node type:', node.type);
-          break;
-        default:
-          console.log('Unknown node type:', node.type);
-          break;
+    const compiler= compilers[node.type];
+    if (compiler) {
+      try {
+        await compiler(node);
+        state.updateNode(nodeId, {errors: undefined});
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error(`Error compiling node ${nodeId}:`, error);
+          state.addError(nodeId, error.message);
+        } else {
+          console.error(`Unexpected error compiling node ${nodeId}:`, error);
+          state.addError(nodeId, 'Unexpected error');
+        }
+        break;
       }
-    } catch (error) {
-      console.error(`Error compiling node ${nodeId}:`, error);
-      break;
+    } else {
+      console.log(`No compiler available for node type: ${node.type}`);
+      continue;
     }
   }
 }
 
-export async function resolveModelIO(startNode: ExtendedNode): Promise<{inputs: tf.SymbolicTensor[], outputs: tf.SymbolicTensor[]}> {
+export async function resolveModelIO(modelNode: ExtendedNode): Promise<{inputs: tf.SymbolicTensor[], outputs: tf.SymbolicTensor[]}> {
   const {nodes, edges} = useNodes.getState();
   let inputNodes: ExtendedNode[] = []
   let outputNodes: ExtendedNode[] = [];
 
-  // Find outputs directly connected to startNode
+  // Find model outputs directly connected to startNode
   edges.forEach(edge => {
-    if (edge.target === startNode.id) {
+    if (edge.target === modelNode.id && edge.targetHandle === 'In') {
       const targetNode = nodes.find(n => n.id === edge.source);
       if (targetNode) {
         outputNodes.push(targetNode);

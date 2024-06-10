@@ -9,7 +9,7 @@ import 'reactflow/dist/style.css';
 import {nodeTypes} from '@/app/nodes/nodeTypes';
 import useNodes, {NodeState} from '@/app/nodes/nodeStore';
 import {useShallow} from 'zustand/react/shallow';
-import { useEffect } from 'react';
+import {useEffect} from 'react';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgpu';
 
@@ -28,7 +28,7 @@ async function setupTfBackend() {
     console.error('WebGPU is not supported on this device:', e);
   }
   await tf.ready();
-  console.log(`Backend: ${tf.getBackend()}`); // TODO: remove
+  console.log(`Backend: ${tf.getBackend()}`); // TODO: remove for prod
 };
 
 export default function NodeFlow() {
@@ -37,12 +37,7 @@ export default function NodeFlow() {
     useShallow(selector),
   );
 
-  useEffect(() => {
-    console.log('Setting up TF backend');
-    setupTfBackend();
-  }, []);
-
-  // listener for
+  useEffect(() => {setupTfBackend()}, []);
 
   return (
     <ReactFlow

@@ -1,4 +1,4 @@
-import React, {use, useState} from 'react';
+import React, {use, useCallback, useMemo, useState} from 'react';
 import { Edge, NodeProps} from 'reactflow';
 import {DenseNodeData, ExtendedNode, ExtendedNodeData, InputNodeData, LayerNodeData} from '@/app/nodes/nodeTypes';
 import useNodes from '@/app/nodes/nodeStore';
@@ -13,28 +13,33 @@ export default function DenseNode({ id, isConnectable, data }: NodeProps<DenseNo
   const state = useNodes.getState();
   const [inputShape, setInputShape] = useState<string>(data.inputShape.join(', '));
   const [activation, setActivation] = useState<string>(data.activation);
+  const errors = useMemo(() => {
+    return data.errors ? data.errors : undefined;
+  }, [data.errors]);
   
-  const onChangeUnits = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const onChangeUnits = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const value = parseFloat(e.target.value);
     state.updateNode(id, {units: value});
-  };
-
-  const onChangeActivation = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setActivation(e.target.value);
-    if (validActivation(e.target.value)){
-      state.updateNode(id, {activation: e.target.value});
-    };
-  }
+  }, [id, state]);
   
-  const onChangeInputShape = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const onChangeActivation = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const activation = e.target.value;
+    setActivation(activation);
+    if (validActivation(activation)){
+      state.updateNode(id, {activation: activation});
+    };
+  }, [id, state]);
+  
+  const onChangeInputShape = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (!isValidShapeInput(e.target.value)) return;
-    setInputShape(e.target.value);
-    const values = e.target.value
+    const inputShape = e.target.value;
+    setInputShape(inputShape);
+    const values = inputShape
       .split(',')
       .map(v => parseInt(v.trim(), 10))
       .filter(v => !isNaN(v));
     state.updateNode(id, {inputShape: values});
-  };
+  }, [id, state]);
 
   return (
     <Node
@@ -42,10 +47,12 @@ export default function DenseNode({ id, isConnectable, data }: NodeProps<DenseNo
       type={"layer"}
       inputs={["In"]}
       outputs={["Out"]}
+      errors={errors}
     >
       <NodeField name={"Units"} value={data.units} onChange={onChangeUnits} />
       <NodeField name={"Activation"} value={activation} onChange={onChangeActivation} type={"select"} options={Object.keys(activations)}/>
       <NodeField name={"Input Shape"} value={inputShape} onChange={onChangeInputShape} extra />
+      {errors}
     </Node>
   );
 }

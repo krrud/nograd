@@ -23,7 +23,7 @@ const initialNodes: ExtendedNode[] = [
   {id: 'dense1', type: 'denseLayer', position: { x: -150, y: 200 }, data: {units: 10, activation: 'ReLU', inputShape: [4, 4]}},
   {id: 'dense2', type: 'denseLayer', position: { x: 50, y: 200 }, data: {units: 10, activation: 'ReLU', inputShape: [4, 4]}},
   {id: 'input1', type: 'inputLayer', position: { x: -350, y: 200 }, data: {shape: [4, 4]}},
-  {id: 'model1', type: 'model', position: { x: 250, y: 200 }, data: {optimizer: 'Adam', loss: 'MSE'}},
+  {id: 'model1', type: 'model', position: { x: 250, y: 200 }, data: {optimizer: 'Adam', loss: 'MSE', lr: 0.001}},
 ];
 
 export type NodeState = {
@@ -41,10 +41,13 @@ export type NodeState = {
   onConnect: OnConnect;
   setNodes: (nodes: ExtendedNode[]) => void;
   setEdges: (edges: Edge[]) => void;
+  addNode: (node: ExtendedNode) => void;
+  removeNode: (nodeId: string) => void;
   updateNode: (nodeId: string, data: {}) => void;
   getNode: (nodeId: string) => ExtendedNode | undefined;
   getInputEdges: (nodeId: string) => { source: string; sourceHandle: string | null | undefined; }[];
   getAllConnectedNodes: (nodeId: string) => ExtendedNode[];
+  addError: (nodeId: string, error: string) => void;
 };
 
 const useNodeStore = create<NodeState>((set, get) => ({
@@ -133,6 +136,15 @@ const useNodeStore = create<NodeState>((set, get) => ({
   setEdges: (edges: Edge[]) => {
     set({ edges });
   },
+  addNode: (node: ExtendedNode) => {
+    set(state => {
+      if (state.nodes.some(n => n.id === node.id)) {
+        console.warn(`Node with ID ${node.id} already exists.`);
+        return state;
+      }
+      return { nodes: [...state.nodes, node] };
+    });
+  },
   updateNode: (nodeId: string, data: {}) => {
     set(state => {
       const nodeExists = state.nodes.some(node => node.id === nodeId);
@@ -147,7 +159,18 @@ const useNodeStore = create<NodeState>((set, get) => ({
       };
     });
   },
-  
+  removeNode: (nodeId: string) => {
+    set(state => {
+      const nodeExists = state.nodes.some(node => node.id === nodeId);
+      if (!nodeExists) {
+        console.warn(`Node with ID ${nodeId} not found.`);
+        return state;
+      }
+      return {
+        nodes: state.nodes.filter(node => node.id !== nodeId)
+      };
+    });
+  },
   getNode: (nodeId: string) => {
     return get().nodes.find(node => node.id === nodeId);
   },
@@ -165,6 +188,18 @@ const useNodeStore = create<NodeState>((set, get) => ({
   },
   getAllConnectedNodes: (nodeId: string) => {
     return getAllConnectedNodes(nodeId);
+  },
+  addError: (nodeId: string, error: string) => {
+    set(state => {
+      const node = state.nodes.find(node => node.id === nodeId);
+      const newErrors = node?.data.errors ? Array.from(new Set([...node.data.errors, error])) : [error];
+      if (!node) return state;
+      return {
+        nodes: state.nodes.map(node =>
+          node.id === nodeId ? { ...node, data: { ...node.data, errors: newErrors } } : node
+        )
+      };
+    });
   }
 }));
 

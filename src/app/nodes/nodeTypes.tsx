@@ -9,37 +9,43 @@ import ModelNode from '@/app/nodes/models/modelNode';
 
 
 export interface BaseNodeData {
-  label: string;
+  errors?: string[];
 }
 
-export interface MultiplyNodeData {
+export interface MultiplyNodeData extends BaseNodeData {
   a?: number;
   b?: number;
   output?: number;
 }
 
-export interface ValueNodeData {
+export interface ValueNodeData extends BaseNodeData {
   x: number;
 }
 
-export interface DenseNodeData {
+export interface DenseNodeData extends BaseNodeData {
   units: number;
   activation: string;
   inputShape: number[];
   output?: tf.SymbolicTensor;
 }
 
-export interface InputNodeData {
+export interface InputNodeData extends BaseNodeData {
   shape: number[];
   output?: tf.SymbolicTensor;
 }
 
-export interface ModelNodeData {
+export interface ModelNodeData extends BaseNodeData {
   optimizer: string;
   loss: string;
+  lr?: number;
 }
 
-export type ExtendedNodeData = BaseNodeData | MultiplyNodeData | ValueNodeData | DenseNodeData | InputNodeData | ModelNodeData;
+export type ExtendedNodeData = 
+  | MultiplyNodeData 
+  | ValueNodeData 
+  | DenseNodeData 
+  | InputNodeData 
+  | ModelNodeData;
 
 export type LayerNodeData = DenseNodeData | InputNodeData;
 
@@ -70,9 +76,7 @@ type BaseNodeType = NodeProps<BaseNodeData>;
 
 export default function BaseNode({ data }: BaseNodeType) {
   return (
-    <div style={{ border: '1px solid black', padding: '10px', backgroundColor: '#fff' }}>
-      {data.label}
-    </div>
+    <div style={{ border: '1px solid black', padding: '10px', backgroundColor: '#fff' }}/>
   );
 }
 

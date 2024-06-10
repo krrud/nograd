@@ -23,7 +23,7 @@ const config: Config = {
       },
       fontSize: {
         "xxs": "0.5rem"
-      }
+      },
     },
   },
   plugins: [],

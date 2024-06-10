@@ -1,8 +1,8 @@
-import React, {useMemo, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {Handle, Position} from "reactflow";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
-import Select from 'react-select'
+import { Tooltip } from "react-tooltip";
 
 // Node
 interface NodeProps {
@@ -11,6 +11,7 @@ interface NodeProps {
   type: string;
   inputs?: string[];
   outputs?: string[];
+  errors?: string[];
 }
 
 export default function Node({
@@ -19,6 +20,7 @@ export default function Node({
   type,
   inputs,
   outputs,
+  errors,
 }: NodeProps) {
 
   const [showExtra, setShowExtra] = useState(false);
@@ -31,7 +33,7 @@ export default function Node({
         <Handle          
           type={type}
           position={position}
-          id={`${type}${i}`}
+          id={`${labels[i]}`}
           isConnectable={true}
           style={{ top: `${44 + i * spacing}px`, width: 8, height: 8}}
         />
@@ -71,15 +73,32 @@ export default function Node({
     return false;
   });
 
+  const errorDisplay = useMemo(() => {
+    if (!errors || errors.length === 0) return null;
+    return (
+        <div className='w-3 h-3 rounded-full bg-white mr-2 justify-center items-center flex font-bold cursor-pointer' id="error-handle">
+          <h1 className="text-black">!</h1>
+          <Tooltip id="error-tooltip" place="top" anchorSelect="#error-handle" style={{maxWidth: 400}} clickable className="nodrag select-text">
+            {errors.map((error, index) => (
+              <p className="text-xs text-gray-300 font-normal" key={index}>{error}</p>            
+            ))}
+          </Tooltip>
+        </div>
+      );
+  }, [errors]);
+
   return (
-    <div className="flex flex-col w-40 rounded-lg shadow-lg overflow-hidden">
+    <div className="flex flex-col w-44 rounded-lg shadow-lg overflow-hidden cursor-grab">
       <div className={`${headerColor} px-3 py-1.5 text-xs text-gray-200 flex justify-between items-center`}>
-        {title}
-        <span className="opacity-20 hover:opacity-100">
-          <FontAwesomeIcon icon={faQuestionCircle} />
-        </span>
-      </div>
-      <div className="bg-white px-3 pt-8 pb-1">
+        {title}      
+        <div className="flex flex-row items-center">
+            {errorDisplay}   
+            <span className="opacity-20 hover:opacity-100">
+              <FontAwesomeIcon icon={faQuestionCircle} />
+            </span>
+          </div>
+        </div>
+      <div className="bg-white px-3 pt-8 pb-1 cursor-grab">
         {handles}
         {React.Children.map(children, (child, index) => {
         if (React.isValidElement(child)) {
@@ -102,6 +121,7 @@ export default function Node({
   );
 }
 
+
 // Node Field
 interface NodeFieldProps {
   value: any;
@@ -110,9 +130,13 @@ interface NodeFieldProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   options?: string[];
   extra?: boolean;
+  handle?: number;
 }
 
-export function NodeField({value, type, name, onChange=()=>{}, options, extra=false} : NodeFieldProps) {
+export function NodeField({value, type, name, onChange=()=>{}, options, extra=false, handle=undefined} : NodeFieldProps) {
+  const fieldRef = React.useRef<HTMLInputElement>(null);
+
+  
   let inputType = type || typeof value || "text";
   function field() {
     switch (inputType) {
@@ -121,7 +145,7 @@ export function NodeField({value, type, name, onChange=()=>{}, options, extra=fa
           <select
             value={value}
             onChange={onChange}
-            className="nodrag text-xs w-full h-full bg-transparent outline-none text-left px-1 border border-gray-100 rounded text-right"
+            className="nodrag text-xs w-1/2 h-full bg-transparent outline-none text-left px-1 border border-gray-200 rounded text-right"
           >
             {options?.map((option, index) => (
               <option key={index} value={option}>{option}</option>
@@ -135,15 +159,27 @@ export function NodeField({value, type, name, onChange=()=>{}, options, extra=fa
             type={inputType}
             value={value}
             onChange={onChange}
-            className="nodrag text-xs text-right w-full h-full bg-transparent outline-none px-1 border border-gray-100 rounded"
+            className="nodrag text-xs text-right w-1/2 h-full bg-transparent outline-none px-1 border border-gray-200 rounded"
           />
         );
     }
   }
+
   return (
-    <label className="flex items-start text-xs h-6 mb-2">
-      <span className="whitespace-nowrap mt-1 mr-1.5 text-xxs">{name}:</span>
-      {field()}
-    </label>
+    <div ref={fieldRef}>        
+      {handle &&         
+        <Handle
+          type="target"
+          position={Position.Left}
+          id={name}
+          isConnectable={true}
+          style={{top: 32 * (handle-1) + 72, height: 8, width: 8, backgroundColor: "white", borderColor: "black", borderWidth: 1}}
+        />
+      }
+      <label className="flex items-start text-xs h-6 mb-2 justify-between cursor-grab">
+        <span className="whitespace-nowrap mt-1 mr-1.5 text-xxs">{name}:</span>
+        {field()}
+      </label>
+    </div>
   );
 }

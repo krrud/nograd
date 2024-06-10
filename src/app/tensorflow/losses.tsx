@@ -12,3 +12,7 @@ export const validLosses = Object.keys(losses);
 export function validLoss(value: string): value is keyof typeof losses {
     return validLosses.includes(value);
 }
+
+export function getLoss(value: string): string {
+    return losses[value];
+}

@@ -47,6 +47,7 @@ model.fit(xs, labels, {
 // MULTI HEAD ATTN
 
 import * as tf from '@tensorflow/tfjs';
+import { get } from 'http';
 
 // Define the custom MultiHeadAttention layer
 class MultiHeadAttention extends tf.layers.Layer {
