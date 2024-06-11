@@ -74,10 +74,10 @@ export async function compileNodes(sorted: string[]) {
       } catch (error: unknown) {
         if (error instanceof Error) {
           console.error(`Error compiling node ${nodeId}:`, error);
-          state.addError(nodeId, error.message);
+          state.addError(node, error.message, true);
         } else {
           console.error(`Unexpected error compiling node ${nodeId}:`, error);
-          state.addError(nodeId, 'Unexpected error');
+          state.addError(node, 'Unexpected error', true);
         }
         break;
       }
@@ -90,6 +90,7 @@ export async function compileNodes(sorted: string[]) {
 
 export async function resolveModelIO(modelNode: ExtendedNode): Promise<{inputs: tf.SymbolicTensor[], outputs: tf.SymbolicTensor[]}> {
   const {nodes, edges} = useNodes.getState();
+  console.log("Resolving model IO: ", modelNode.id)
   let inputNodes: ExtendedNode[] = []
   let outputNodes: ExtendedNode[] = [];
 
@@ -153,6 +154,8 @@ export function topoSort(nodes: ExtendedNode[]) {
   });
 
   edges.forEach(edge => {
+    if (!edge.source || !edge.target) return;
+    if (!adjList.has(edge.source) || !adjList.has(edge.target)) return;
     inDegree.set(edge.target, inDegree.get(edge.target)! + 1);
     adjList.set(edge.source, [...adjList.get(edge.source)!, edge.target]);
   });

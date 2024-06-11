@@ -47,15 +47,15 @@ export type NodeState = {
   getNode: (nodeId: string) => ExtendedNode | undefined;
   getInputEdges: (nodeId: string) => { source: string; sourceHandle: string | null | undefined; }[];
   getAllConnectedNodes: (nodeId: string) => ExtendedNode[];
-  addError: (nodeId: string, error: string) => void;
+  addError: (node: ExtendedNode, error: string, clearExisting?: boolean) => void;
 };
 
 const useNodeStore = create<NodeState>((set, get) => ({
-  compile: async (nodes=get().nodes) => {
+  compile: async (nodes=undefined) => {
     let result = false;
     try {
       set({ compiling: true });
-      const sorted = topoSort(nodes);
+      const sorted = topoSort(nodes || get().nodes);
       await compileNodes(sorted);
       result = true;
       console.log('Compilation complete');
@@ -189,18 +189,16 @@ const useNodeStore = create<NodeState>((set, get) => ({
   getAllConnectedNodes: (nodeId: string) => {
     return getAllConnectedNodes(nodeId);
   },
-  addError: (nodeId: string, error: string) => {
-    set(state => {
-      const node = state.nodes.find(node => node.id === nodeId);
-      const newErrors = node?.data.errors ? Array.from(new Set([...node.data.errors, error])) : [error];
-      if (!node) return state;
-      return {
-        nodes: state.nodes.map(node =>
-          node.id === nodeId ? { ...node, data: { ...node.data, errors: newErrors } } : node
-        )
-      };
-    });
+  addError: (node: ExtendedNode, error: string, clearExisting: boolean=false) => {
+      const currentErrors = node.data.errors || [];
+      if (currentErrors.includes(error)) return;
+  
+      let errors: string[] = [];
+      if (clearExisting) errors = [error];
+      else errors = [...currentErrors, error];
+      get().updateNode(node.id, {errors});
   }
+  
 }));
 
 export default useNodeStore;

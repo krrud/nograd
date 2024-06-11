@@ -13,9 +13,7 @@ export default function ModelNode({ id, isConnectable, data }: NodeProps<ModelNo
   const state = useNodes.getState();
   const [compiled, setCompiled] =useState(false);
   const inputLength = useNodes(state => state.getAllConnectedNodes(id)).length; //TODO: check against data not just number of connections
-  const errors = useMemo(() => {
-    return data.errors ? data.errors : undefined;
-  }, [data.errors]);
+  const errors = useMemo(() => data.errors || [], [data.errors]);
 
   useEffect(() => {
     setCompiled(false);
@@ -42,6 +40,7 @@ export default function ModelNode({ id, isConnectable, data }: NodeProps<ModelNo
   
   const handleCompile = useCallback(async () => {
     const inputNodes = getAllConnectedNodes(id);
+    console.log("Input Nodes: ", inputNodes);
     const success = await state.compile(inputNodes);
     if (success) setCompiled(true);
     else setCompiled(false);
@@ -49,11 +48,13 @@ export default function ModelNode({ id, isConnectable, data }: NodeProps<ModelNo
 
   const compileColor = compiled ? "text-green-500" : "text-red-500";
 
+  const optimizerTooltip = "The optimizer is the algorithm used to update the weights of the model during training. Adam is typically a good starting point."
+
   return (
     <Node title={"Model"} inputs={["In"]} outputs={["Out"]} type={"model"} errors={errors}>
-      <NodeField name={"Optimizer"} value={data.optimizer} onChange={onChangeOptimizer} type={"select"} options={validOptimizers} handle={1}/>
-      <NodeField name={"Learning Rate"} value={data.lr} onChange={onChangeLr} handle={2}/>
-      <NodeField name={"Loss"} value={data.loss} onChange={onChangeLoss} type={"select"} options={validLosses} handle={3}/>
+      <NodeField name={"Optimizer"} value={data.optimizer} onChange={onChangeOptimizer} type={"select"} options={validOptimizers} handle={1} tooltip={optimizerTooltip}/>
+      <NodeField name={"Learning Rate"} value={data.lr} onChange={onChangeLr}/>
+      <NodeField name={"Loss"} value={data.loss} onChange={onChangeLoss} type={"select"} options={validLosses}/>
       <div className="justify-end w-full flex mb-1">
         <h1 className={`text-xxs ${compileColor} hover:cursor-pointer pl-2 pr-1 py-1`} onClick={handleCompile}>
           Compile
@@ -70,7 +71,7 @@ export async function compileModelNode(node: ExtendedNode) {
   const {inputs, outputs} = await resolveModelIO(node);
   if (!inputs.length || !outputs.length) return;
 
-  const model = tf.model({inputs, outputs});
+  const model = tf.model({inputs, outputs, name: node.id});
   const optimizer = getOptimizer(node.data.optimizer);
   const loss = getLoss(node.data.loss);
 
@@ -104,7 +105,6 @@ export async function compileModelNode(node: ExtendedNode) {
     cleanup();
     throw error;
   }
-
   cleanup();
 }
 

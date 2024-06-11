@@ -50,7 +50,7 @@ export async function compileInputNode(node: ExtendedNode) {
   console.log("Compiling Input Node: ", node.id);
   if (node.type === 'inputLayer' && isInputNodeData(node.data)) {
     const shape = node.data.shape;
-    const output = tf.layers.input({shape});
+    const output = tf.layers.input({shape, name: node.id});
     useNodes.getState().updateNode(node.id, {output});
   }
   console.log("Compiled Input Node: ", node.id);

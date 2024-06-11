@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {Handle, Position} from "reactflow";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronUp, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp, faClipboard, faCopy, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
 import { Tooltip } from "react-tooltip";
 
 // Node
@@ -35,7 +35,7 @@ export default function Node({
           position={position}
           id={`${labels[i]}`}
           isConnectable={true}
-          style={{ top: `${44 + i * spacing}px`, width: 8, height: 8}}
+          style={{ top: `${44 + i * spacing}px`, width: 9, height: 9}}
         />
         <h1 className="text-xxs absolute" style={{
           top: `${39 + i * spacing}px`,
@@ -76,24 +76,32 @@ export default function Node({
   const errorDisplay = useMemo(() => {
     if (!errors || errors.length === 0) return null;
     return (
-        <div className='w-3 h-3 rounded-full bg-white mr-2 justify-center items-center flex font-bold cursor-pointer' id="error-handle">
+        <div className='w-3 h-3 rounded-full bg-white mr-2 justify-center items-center flex font-bold cursor-pointer' id="error-anchor">
           <h1 className="text-black">!</h1>
-          <Tooltip id="error-tooltip" place="top" anchorSelect="#error-handle" style={{maxWidth: 400}} clickable className="nodrag select-text">
-            {errors.map((error, index) => (
-              <p className="text-xs text-gray-300 font-normal" key={index}>{error}</p>            
-            ))}
+          <Tooltip id="error-tooltip" place="top" anchorSelect="#error-anchor" clickable className="nodrag select-text max-w-80">
+            <div className="flex items-center">
+              {errors.map((error, index) => (
+                <p className="text-xs text-gray-300 font-normal" key={index}>{error}</p>
+              ))}
+              <FontAwesomeIcon
+                icon={faClipboard}
+                className="text-gray-300 ml-2"
+                onClick={async()=>await navigator.clipboard.writeText(errors.join(", "))}
+              />              
+            </div>
+
           </Tooltip>
         </div>
       );
   }, [errors]);
 
   return (
-    <div className="flex flex-col w-44 rounded-lg shadow-lg overflow-hidden cursor-grab">
+    <div className="flex flex-col w-48 rounded-lg shadow-lg overflow-hidden cursor-grab">
       <div className={`${headerColor} px-3 py-1.5 text-xs text-gray-200 flex justify-between items-center`}>
         {title}      
         <div className="flex flex-row items-center">
             {errorDisplay}   
-            <span className="opacity-20 hover:opacity-100">
+            <span className="opacity-20 hover:opacity-100 cursor-pointer">
               <FontAwesomeIcon icon={faQuestionCircle} />
             </span>
           </div>
@@ -131,9 +139,10 @@ interface NodeFieldProps {
   options?: string[];
   extra?: boolean;
   handle?: number;
+  tooltip?: string;
 }
 
-export function NodeField({value, type, name, onChange=()=>{}, options, extra=false, handle=undefined} : NodeFieldProps) {
+export function NodeField({value, type, name, onChange=()=>{}, options, extra=false, handle=undefined, tooltip=""} : NodeFieldProps) {
   const fieldRef = React.useRef<HTMLInputElement>(null);
 
   
@@ -145,7 +154,7 @@ export function NodeField({value, type, name, onChange=()=>{}, options, extra=fa
           <select
             value={value}
             onChange={onChange}
-            className="nodrag text-xs w-1/2 h-full bg-transparent outline-none text-left px-1 border border-gray-200 rounded text-right"
+            className="nodrag text-xs w-24 h-full bg-transparent outline-none text-left px-1 border border-gray-200 rounded text-right"
           >
             {options?.map((option, index) => (
               <option key={index} value={option}>{option}</option>
@@ -159,7 +168,7 @@ export function NodeField({value, type, name, onChange=()=>{}, options, extra=fa
             type={inputType}
             value={value}
             onChange={onChange}
-            className="nodrag text-xs text-right w-1/2 h-full bg-transparent outline-none px-1 border border-gray-200 rounded"
+            className="nodrag text-xs text-right w-24 h-full bg-transparent outline-none px-1 border border-gray-200 rounded"
           />
         );
     }
@@ -177,7 +186,19 @@ export function NodeField({value, type, name, onChange=()=>{}, options, extra=fa
         />
       }
       <label className="flex items-start text-xs h-6 mb-2 justify-between cursor-grab">
-        <span className="whitespace-nowrap mt-1 mr-1.5 text-xxs">{name}:</span>
+        <span id={`${name}-label-anchor`} className="whitespace-nowrap mt-1 mr-1.5 text-xxs">{name}:
+          {tooltip &&
+            <Tooltip 
+              id={`${name}-label-tooltip`}
+              place="top"
+              className="nodrag select-text"
+              anchorSelect={`#${name}-label-anchor`}
+              style={{maxWidth: 300}}
+              delayShow={1000}
+            >
+              <p className="text-xxs text-gray-300 font-normal text-wrap">{tooltip}</p>
+            </Tooltip>}          
+        </span>
         {field()}
       </label>
     </div>

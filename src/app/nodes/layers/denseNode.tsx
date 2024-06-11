@@ -66,6 +66,7 @@ export async function compileDenseNode(node: ExtendedNode) {
       const layer = tf.layers.dense({
         units: node.data.units,
         activation: activation,
+        name: node.id,
       });
       console.log("Activation: ", node.data.activation);
       const inputs = state.getInputEdges(node.id);

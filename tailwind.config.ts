@@ -22,7 +22,7 @@ const config: Config = {
         "model": "#E85F5C",
       },
       fontSize: {
-        "xxs": "0.5rem"
+        "xxs": "0.55rem"
       },
     },
   },
