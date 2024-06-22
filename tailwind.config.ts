@@ -20,6 +20,7 @@ const config: Config = {
         "layer": "#589CBF",
         "data": "#73BFB8",
         "model": "#E85F5C",
+        "compute": "#E68600",
       },
       fontSize: {
         "xxs": "0.55rem"

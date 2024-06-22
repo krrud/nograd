@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import { NodeProps} from 'reactflow';
 import {ExtendedNode, InputNodeData} from '../nodeTypes';
 import useNodes from '../nodeStore';
@@ -15,7 +15,7 @@ export default function InputNode({ id, isConnectable, data }: NodeProps<InputNo
     return data.errors ? data.errors : undefined;
   }, [data.errors]);
 
-  const onChangeShape = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const onChangeShape = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (!isValidShapeInput(e.target.value)) return;
     setShape(e.target.value);
     const newShape = e.target.value
@@ -23,7 +23,7 @@ export default function InputNode({ id, isConnectable, data }: NodeProps<InputNo
       .map(v => parseInt(v.trim(), 10))
       .filter(v => !isNaN(v));
     state.updateNode(id, {shape: newShape});
-  };
+  }, [id, state]);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

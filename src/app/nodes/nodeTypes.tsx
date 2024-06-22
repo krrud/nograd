@@ -3,9 +3,10 @@ import {Node, NodeProps} from "reactflow";
 import MultiplyNode from '@/app/nodes/test/multiplyNode';
 import ValueNode from '@/app/nodes/test/valueNode';
 import DenseNode from '@/app/nodes/layers/denseNode';
-import * as tf from '@tensorflow/tfjs';
 import InputNode from '@/app/nodes/layers/inputNode';
 import ModelNode from '@/app/nodes/models/modelNode';
+import TrainModelNode from '@/app/nodes/models/trainModelNode';
+import * as tf from '@tensorflow/tfjs';
 
 
 export interface BaseNodeData {
@@ -40,25 +41,36 @@ export interface ModelNodeData extends BaseNodeData {
   lr?: number;
 }
 
+export interface TrainNodeData extends BaseNodeData {
+  epochs: number;
+  batchSize: number;
+  model?: tf.LayersModel;
+  x?: tf.Tensor;
+  y?: tf.Tensor;
+  output?: tf.History;
+}
+
 export type ExtendedNodeData = 
   | MultiplyNodeData 
   | ValueNodeData 
   | DenseNodeData 
   | InputNodeData 
-  | ModelNodeData;
+  | ModelNodeData
+  | TrainNodeData;
 
 export type LayerNodeData = DenseNodeData | InputNodeData;
 
 export interface ExtendedNode extends Node<ExtendedNodeData> {
   data: ExtendedNodeData;
   type: 
-    'default' |
-    'base' |
-    'multiply' |
-    'value' |
-    'denseLayer' |
-    'inputLayer' |
-    'model';
+    | 'default' 
+    | 'base'
+    | 'multiply'
+    | 'value'
+    | 'denseLayer'
+    | 'inputLayer'
+    | 'model'
+    | 'trainModel';
 }
 
 export const nodeTypes = {
@@ -68,15 +80,16 @@ export const nodeTypes = {
   denseLayer: DenseNode,
   inputLayer: InputNode,
   model: ModelNode,
+  trainModel: TrainModelNode,
 };
 
 
 // base node
 type BaseNodeType = NodeProps<BaseNodeData>;
 
-export default function BaseNode({ data }: BaseNodeType) {
+export default function BaseNode({data}: BaseNodeType) {
   return (
-    <div style={{ border: '1px solid black', padding: '10px', backgroundColor: '#fff' }}/>
+    <div style={{border: '1px solid black', padding: '10px', backgroundColor: '#fff'}}/>
   );
 }
 

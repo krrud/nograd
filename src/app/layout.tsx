@@ -9,7 +9,7 @@ const firaSans = Fira_Sans({ weight: ["100", "200", "300", "400", "500", "600", 
 
 export const metadata: Metadata = {
   title: "NoGrad",
-  description: "Intuitive AI for Everyone",
+  description: "Intuitive ML for Everyone",
 };
 
 export default function RootLayout({

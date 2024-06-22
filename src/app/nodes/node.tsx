@@ -1,8 +1,8 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useMemo, useState} from "react";
 import {Handle, Position} from "reactflow";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faChevronUp, faClipboard, faCopy, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
-import { Tooltip } from "react-tooltip";
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faClipboard, faQuestionCircle} from '@fortawesome/free-solid-svg-icons';
+import {Tooltip} from "react-tooltip";
 
 // Node
 interface NodeProps {
@@ -27,7 +27,7 @@ export default function Node({
 
   function createHandles (labels: string[], type: "target" | "source", position: Position) {
     const count = labels.length;
-    const spacing = 24;
+    const spacing = 30;
     return Array.from({ length: count }, (v, i) => (
       <div key={`${type}-handle-${i}`}>
         <Handle          
@@ -62,7 +62,8 @@ export default function Node({
   const headerColors: { [key: string]: string } = {
     data: "bg-data",
     layer: "bg-layer",
-    model: "bg-model"
+    model: "bg-model",
+    compute: "bg-compute",
   };
   const headerColor = headerColors[type] || "bg-default";
 
@@ -73,12 +74,23 @@ export default function Node({
     return false;
   });
 
+  const handlePadding = useMemo(() => {
+    const count = Math.max(inputs?.length || 0, outputs?.length || 0);
+    return count * 29 + 8;
+  }, [inputs, outputs]);
+
   const errorDisplay = useMemo(() => {
     if (!errors || errors.length === 0) return null;
     return (
         <div className='w-3 h-3 rounded-full bg-white mr-2 justify-center items-center flex font-bold cursor-pointer' id="error-anchor">
           <h1 className="text-black">!</h1>
-          <Tooltip id="error-tooltip" place="top" anchorSelect="#error-anchor" clickable className="nodrag select-text max-w-80">
+          <Tooltip
+            id="error-tooltip"
+            place="top"
+            anchorSelect="#error-anchor"
+            clickable
+            className="nodrag select-text max-w-80"
+          >
             <div className="flex items-center">
               {errors.map((error, index) => (
                 <p className="text-xs text-gray-300 font-normal" key={index}>{error}</p>
@@ -97,7 +109,7 @@ export default function Node({
 
   return (
     <div className="flex flex-col w-48 rounded-lg shadow-lg overflow-hidden cursor-grab">
-      <div className={`${headerColor} px-3 py-1.5 text-xs text-gray-200 flex justify-between items-center`}>
+      <div className={`${headerColor} px-3 py-1.5 text-xs text-gray-100 flex justify-between items-center`}>
         {title}      
         <div className="flex flex-row items-center">
             {errorDisplay}   
@@ -106,7 +118,7 @@ export default function Node({
             </span>
           </div>
         </div>
-      <div className="bg-white px-3 pt-8 pb-1 cursor-grab">
+      <div className={`bg-white px-3 pb-2 cursor-grab`} style={{paddingTop: handlePadding}}>
         {handles}
         {React.Children.map(children, (child, index) => {
         if (React.isValidElement(child)) {
@@ -182,7 +194,7 @@ export function NodeField({value, type, name, onChange=()=>{}, options, extra=fa
           position={Position.Left}
           id={name}
           isConnectable={true}
-          style={{top: 32 * (handle-1) + 72, height: 8, width: 8, backgroundColor: "white", borderColor: "black", borderWidth: 1}}
+          style={{top: 32 * (handle-1) + 76, height: 8, width: 8, backgroundColor: "white", borderColor: "black", borderWidth: 1}}
         />
       }
       <label className="flex items-start text-xs h-6 mb-2 justify-between cursor-grab">

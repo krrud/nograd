@@ -28,7 +28,12 @@ export function isValidShapeInput(value: string | undefined) {
   }
 }
 
-export function isValidConnection(sourceNode?: ExtendedNode, targetNode?: ExtendedNode) {
+export function isValidConnection(
+  sourceNode?: ExtendedNode,
+  targetNode?: ExtendedNode,
+  sourceHandle?: string | null,
+  targetHandle?: string | null
+) {
   const validLayers = ['denseLayer', 'inputLayer'];
   if (!sourceNode || !targetNode) return false;
   let valid = false;
@@ -38,6 +43,13 @@ export function isValidConnection(sourceNode?: ExtendedNode, targetNode?: Extend
       break;
     case 'model':
       valid = validLayers.includes(sourceNode.type);
+      break;
+    case 'trainModel':
+      if (sourceNode.type === 'model' && targetNode.type === 'trainModel') {
+        if (sourceHandle === 'Out' && targetHandle === 'Model') {
+          valid = true;
+        }
+      } //TODO: add checks checks for X and Y inputs to ensure valid tensors are supplied
       break;
     case 'multiply':
       valid = sourceNode.type === 'value';
@@ -51,7 +63,7 @@ export function isValidConnection(sourceNode?: ExtendedNode, targetNode?: Extend
   return valid;
 }
 
-export async function compileNodes(sorted: string[]) {
+export async function compileNodes(nodes: ExtendedNode[]) {
   const state = useNodes.getState()
   type NodeMap = Record<string, ExtendedNode>;
   const nodeMap = state.nodes.reduce((acc: NodeMap, node: ExtendedNode) => {
@@ -63,7 +75,10 @@ export async function compileNodes(sorted: string[]) {
     inputLayer: compileInputNode,
     model: compileModelNode,
   }
-  for (const nodeId of sorted) {
+  console.log("Compiling Nodes: ", nodes);
+  const sortedNodes = topoSort(nodes);
+  console.log("Sorted Nodes: ", sortedNodes); 
+  for (const nodeId of sortedNodes) {
     const node = nodeMap[nodeId];
     if (!node) continue;
     const compiler= compilers[node.type];
@@ -75,11 +90,12 @@ export async function compileNodes(sorted: string[]) {
         if (error instanceof Error) {
           console.error(`Error compiling node ${nodeId}:`, error);
           state.addError(node, error.message, true);
+          throw error;
         } else {
           console.error(`Unexpected error compiling node ${nodeId}:`, error);
           state.addError(node, 'Unexpected error', true);
+          throw new Error('Unexpected error');
         }
-        break;
       }
     } else {
       console.log(`No compiler available for node type: ${node.type}`);
