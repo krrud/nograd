@@ -11,6 +11,7 @@ import * as tf from '@tensorflow/tfjs';
 
 export interface BaseNodeData {
   errors?: string[];
+  output?: any;
 }
 
 export interface MultiplyNodeData extends BaseNodeData {
@@ -39,9 +40,10 @@ export interface ModelNodeData extends BaseNodeData {
   optimizer: string;
   loss: string;
   lr?: number;
+  output?: tf.LayersModel;
 }
 
-export interface TrainNodeData extends BaseNodeData {
+export interface TrainModelNodeData extends BaseNodeData {
   epochs: number;
   batchSize: number;
   model?: tf.LayersModel;
@@ -50,13 +52,14 @@ export interface TrainNodeData extends BaseNodeData {
   output?: tf.History;
 }
 
-export type ExtendedNodeData = 
+export type ExtendedNodeData =
+  | BaseNodeData
   | MultiplyNodeData 
   | ValueNodeData 
   | DenseNodeData 
   | InputNodeData 
   | ModelNodeData
-  | TrainNodeData;
+  | TrainModelNodeData;
 
 export type LayerNodeData = DenseNodeData | InputNodeData;
 

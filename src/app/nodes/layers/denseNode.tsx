@@ -68,7 +68,6 @@ export async function compileDenseNode(node: ExtendedNode) {
         activation: activation,
         name: node.id,
       });
-      console.log("Activation: ", node.data.activation);
       const inputs = state.getInputEdges(node.id);
       if (inputs.length === 0) {
         throw new Error("No inputs connected to the node.");

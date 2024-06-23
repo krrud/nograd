@@ -12,13 +12,10 @@ import {
   applyEdgeChanges,
 } from 'reactflow';
 import {ExtendedNode} from '@/app/nodes/nodeTypes';
-import {compileNodes, getAllConnectedNodes, isValidConnection, topoSort} from '@/app/nodes/nodeUtils';
+import {compileNodes, getAllConnectedNodes, isValidConnection} from '@/app/nodes/nodeUtils';
 
 
 const initialNodes: ExtendedNode[] = [
-  {id: 'multiply1', type: 'multiply', position: { x: 150, y: 0 }, data: {}},
-  {id: 'value1', type: 'value', position: { x: -150, y: -100 }, data: { x: 4 }},
-  {id: 'value2', type: 'value', position: { x: -150, y: 50 }, data: { x: 5 }},
   {id: 'dense1', type: 'denseLayer', position: { x: -200, y: 200 }, data: {units: 256, activation: 'ReLU', inputShape: [4, 4]}},
   {id: 'dense2', type: 'denseLayer', position: { x: 50, y: 200 }, data: {units: 64, activation: 'ReLU', inputShape: [4, 4]}},
   {id: 'input1', type: 'inputLayer', position: { x: -450, y: 200 }, data: {shape: [4096]}},
@@ -180,7 +177,7 @@ const useNodeStore = create<NodeState>((set, get) => ({
     let result = false;
     const n = nodes || get().nodes;
     try {
-      set({compiling: true});      
+      set({compiling: true});
       get().setEdgeAnimation(n, true);
       await compileNodes(n);
       result = true;

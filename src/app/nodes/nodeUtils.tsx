@@ -6,6 +6,8 @@ import * as tf from '@tensorflow/tfjs';
 import useNodes from '@/app/nodes/nodeStore';
 import { Edge } from "reactflow";
 import { useCallback } from "react";
+import { get } from "http";
+import { compileTrainModelNode } from "./models/trainModelNode";
 
 
 export function isValidShapeInput(value: string | undefined) {
@@ -49,7 +51,9 @@ export function isValidConnection(
         if (sourceHandle === 'Out' && targetHandle === 'Model') {
           valid = true;
         }
-      } //TODO: add checks checks for X and Y inputs to ensure valid tensors are supplied
+      } else {
+        valid = true;
+      }
       break;
     case 'multiply':
       valid = sourceNode.type === 'value';
@@ -74,6 +78,7 @@ export async function compileNodes(nodes: ExtendedNode[]) {
     denseLayer: compileDenseNode,
     inputLayer: compileInputNode,
     model: compileModelNode,
+    trainModel: compileTrainModelNode,
   }
   console.log("Compiling Nodes: ", nodes);
   const sortedNodes = topoSort(nodes);
@@ -106,19 +111,19 @@ export async function compileNodes(nodes: ExtendedNode[]) {
 
 export async function resolveModelIO(modelNode: ExtendedNode): Promise<{inputs: tf.SymbolicTensor[], outputs: tf.SymbolicTensor[]}> {
   const {nodes, edges} = useNodes.getState();
-  console.log("Resolving model IO: ", modelNode.id)
   let inputNodes: ExtendedNode[] = []
   let outputNodes: ExtendedNode[] = [];
 
   // Find model outputs directly connected to startNode
-  edges.forEach(edge => {
-    if (edge.target === modelNode.id && edge.targetHandle === 'In') {
-      const targetNode = nodes.find(n => n.id === edge.source);
-      if (targetNode) {
-        outputNodes.push(targetNode);
-      }
-    }
-  });
+  // edges.forEach(edge => {
+  //   if (edge.target === modelNode.id && edge.targetHandle === 'In') {
+  //     const targetNode = nodes.find(n => n.id === edge.source);
+  //     if (targetNode) {
+  //       outputNodes.push(targetNode);
+  //     }
+  //   }
+  // });
+  outputNodes.push(getInputNode(modelNode, 'In')!);
 
   // Trace back from each output to find all 0 in-degree nodes
   outputNodes.forEach(outputNode => {
@@ -143,13 +148,13 @@ export async function resolveModelIO(modelNode: ExtendedNode): Promise<{inputs: 
       }
     }
   });
-
   const inputData = inputNodes.map(node => {
     return node.data as LayerNodeData;
   });
   const outputData = outputNodes.map(node => {
     return node.data as LayerNodeData;
   });
+
   const inputs = inputData.map(data => data.output as tf.SymbolicTensor);
   const outputs = outputData.map(data => data.output as tf.SymbolicTensor);
 
@@ -220,4 +225,16 @@ export function getAllConnectedNodes(nodeId: string): ExtendedNode[] {
   }
 
   return connectedNodes;
+}
+
+export function getUpstreamNodes(nodeId: string): ExtendedNode[] {
+  return getAllConnectedNodes(nodeId).filter(n => n.id !== nodeId);
+}
+
+export function getInputNode(node: ExtendedNode, handle: string): ExtendedNode | undefined {
+  const edges = useNodes.getState().edges;
+  const edge = edges.find(e => e.target === node.id && e.targetHandle === handle);
+  if (!edge) return;
+  const sourceNode = useNodes.getState().nodes.find(n => n.id === edge.source);
+  return sourceNode;
 }
