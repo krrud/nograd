@@ -20,7 +20,7 @@ const initialNodes: ExtendedNode[] = [
   {id: 'dense2', type: 'denseLayer', position: { x: 50, y: 200 }, data: {units: 64, activation: 'ReLU', inputShape: [4, 4]}},
   {id: 'input1', type: 'inputLayer', position: { x: -450, y: 200 }, data: {shape: [4096]}},
   {id: 'model1', type: 'model', position: { x: 300, y: 200 }, data: {optimizer: 'Adam', loss: 'MSE', lr: 0.001}},
-  {id: 'train1', type: 'trainModel', position: { x: 550, y: 200 }, data: {epochs: 2, batchSize: 32}},
+  {id: 'train1', type: 'trainModel', position: { x: 550, y: 200 }, data: {epochs: 2, batchSize: 32, compiled: false}},
 ];
 
 const initialEdges: Edge[] = [

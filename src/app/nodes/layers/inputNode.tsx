@@ -7,7 +7,7 @@ import { isValidShapeInput } from '../nodeUtils';
 import * as tf from '@tensorflow/tfjs';
 
 
-export default function InputNode({ id, isConnectable, data }: NodeProps<InputNodeData>) {
+export default function InputNode({id, data}: NodeProps<InputNodeData>) {
   const state = useNodes.getState();
   const [shape, setShape] = useState<string>(data.shape.join(", "));
   const [fileContent, setFileContent] = useState<string | ArrayBuffer | null>(null);

@@ -7,6 +7,7 @@ export const optimizers: Record<string, string> = {
     "RMSProp": "rmsprop",
     "Adadelta": "adadelta",
     "Adamax": "adamax",
+    "Adagrad": "adagrad",
 };
 
 export const validOptimizers = Object.keys(optimizers);
@@ -23,6 +24,7 @@ export function getOptimizer(type: string, learningRate?: number): tf.Optimizer 
         "rmsprop": tf.train.rmsprop(lr),
         "adadelta": tf.train.adadelta(lr),
         "adamax": tf.train.adamax(lr),
+        "adagrad": tf.train.adagrad(lr),
     }
     return mappings[optimizers[type]];
 }

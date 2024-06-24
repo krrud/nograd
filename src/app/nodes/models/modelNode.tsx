@@ -9,9 +9,8 @@ import {getLoss, validLoss, validLosses} from '@/app/tensorflow/losses';
 import {getAllConnectedNodes, resolveModelIO, topoSort} from '@/app/nodes/nodeUtils';
 
 
-export default function ModelNode({ id, isConnectable, data }: NodeProps<ModelNodeData>) {
+export default function ModelNode({id, data}: NodeProps<ModelNodeData>) {
   const state = useNodes.getState();
-  const inputLength = useNodes(state => state.getAllConnectedNodes(id)).length; //TODO: check against data not just number of connections
   const errors = useMemo(() => data.errors || [], [data.errors]);
 
   const onChangeOptimizer = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

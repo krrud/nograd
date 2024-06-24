@@ -11,6 +11,7 @@ import * as tf from '@tensorflow/tfjs';
 
 export interface BaseNodeData {
   errors?: string[];
+  compiled?: boolean;
   output?: any;
 }
 
@@ -87,7 +88,6 @@ export const nodeTypes = {
 };
 
 
-// base node
 type BaseNodeType = NodeProps<BaseNodeData>;
 
 export default function BaseNode({data}: BaseNodeType) {

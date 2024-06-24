@@ -1,18 +1,47 @@
-import React, {useCallback, useMemo, useState} from 'react';
-import { NodeProps} from 'reactflow';
-import {ExtendedNode, ModelNodeData, TrainModelNodeData} from '@/app/nodes/nodeTypes';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {NodeProps} from 'reactflow';
+import {ExtendedNode, TrainModelNodeData} from '@/app/nodes/nodeTypes';
 import useNodes from '@/app/nodes/nodeStore';
 import Node, {NodeField} from '@/app/nodes/node';
-import * as tf from '@tensorflow/tfjs';
 import Button from '@/app/components/button';
-import { getAllConnectedNodes, getInputNode } from '../nodeUtils';
+import {getAllConnectedNodes, getInputNode} from '../nodeUtils';
+import {isEqual} from 'lodash';
 
 
-export default function TrainModelNode({ id, isConnectable, data }: NodeProps<TrainModelNodeData>) {
+export default function TrainModelNode({id, data}: NodeProps<TrainModelNodeData>) {
   const state = useNodes.getState();
   const errors = useMemo(() => data.errors || [], [data.errors]);
-  const [compiledColor, setCompiledColor] = useState("text-gray-500");
-  const [trainColor, setTrainColor] = useState("text-gray-500");
+  const [compiled, setCompiled] = useState(false);
+
+  const nodeData = useNodes(state => useMemo(() => state.getAllConnectedNodes(id).map(({data}) => {
+    const {compiled, output, errors, ...query} = data;
+    return query;
+  }), [state.nodes]));
+  
+  const edgeData = useNodes(state => useMemo(() => state.edges.map(({source, target}) => ({
+    source, target
+  })), [state.edges]));
+
+  const prevNodeDataRef = useRef(nodeData);
+  const prevEdgeDataRef = useRef(edgeData);
+  
+  useEffect(() => { // set compiled to false if associated node data changes
+    let dataChanged = false;
+
+    if (!isEqual(prevNodeDataRef.current, nodeData)) {
+      prevNodeDataRef.current = nodeData;
+      dataChanged = true;
+    }
+
+    if (!isEqual(prevEdgeDataRef.current, edgeData)) {
+      prevEdgeDataRef.current = edgeData;
+      dataChanged = true;
+    }
+  
+    if (dataChanged) {
+      setCompiled(false);
+    }
+  }, [nodeData, edgeData]);
 
   const onChangeEpochs = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const value = parseInt(e.target.value);
@@ -27,15 +56,19 @@ export default function TrainModelNode({ id, isConnectable, data }: NodeProps<Tr
   }, [id, state]);
 
   const handleCompile = useCallback(async () => {
-    setCompiledColor("text-gray-500");
-    const c = await state.compile(getAllConnectedNodes(id));
-    setCompiledColor(c ? "text-green-500 border-green-500" : "text-red-500 border-red-500");
+    try {
+      const c = await state.compile(getAllConnectedNodes(id));
+      setCompiled(c);
+    } catch (error) {
+      if (error instanceof Error) {
+        state.addError(state.getNode(id)!, error.message);
+      }
+      setCompiled(false);
+    }
   }, []);
   
   const handleTrain = useCallback(async () => {
-    setTrainColor("text-gray-500");
-    const t = await trainModel(state.getNode(id));
-    setTrainColor(t ? "text-green-500 border-green-500" : "text-red-500 border-red-500");
+    await trainModel(id);
   }, []);
 
   return (
@@ -43,8 +76,8 @@ export default function TrainModelNode({ id, isConnectable, data }: NodeProps<Tr
       <NodeField name={"Epochs"} value={data.epochs} onChange={onChangeEpochs}/>
       <NodeField name={"Batch Size"} value={data.batchSize} onChange={onChangeBatchSize}/>
       <div className="justify-end w-full flex mt-3 mb-1">
-        <Button onClick={handleCompile} label={"Compile"} twStyle={compiledColor} style={{marginRight: 8}}/>
-        <Button onClick={handleTrain} twStyle={trainColor} label={"Train"}/>
+        <Button onClick={handleCompile} label={"Compile"} style={{marginRight: 8}}/>
+        <Button onClick={handleTrain} label={"Train"} disabled={!compiled}/>
       </div>
     </Node>
   );
@@ -56,8 +89,8 @@ export async function compileTrainModelNode(node: ExtendedNode) {
   const data = node.data as TrainModelNodeData;
   const epochs = data.epochs;
   const batchSize = data.batchSize;
-
   const {model, x, y} = await resolveTrainingInputs(node);
+
   state.updateNode(node.id, {model, x, y, epochs, batchSize});
 }
 
@@ -70,13 +103,16 @@ async function resolveTrainingInputs(node: ExtendedNode | undefined) {
   return {model, x, y};
 }
 
-async function trainModel(node: ExtendedNode | undefined) {
-  if (!node) return;
+async function trainModel(nodeId: string) {
   const state = useNodes.getState();
+  const node = state.getNode(nodeId);
+  if (!node) return false;
+  
   const data = node.data as TrainModelNodeData;
   const model = data.model;
   const x = data.x;
   const y = data.y;
+
   if (!model || !x || !y) {
     state.addError(node, 'Missing necessary inputs to train model.');
     return false;

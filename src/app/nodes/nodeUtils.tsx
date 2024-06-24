@@ -90,15 +90,17 @@ export async function compileNodes(nodes: ExtendedNode[]) {
     if (compiler) {
       try {
         await compiler(node);
-        state.updateNode(nodeId, {errors: undefined});
+        state.updateNode(nodeId, {errors: undefined, compiled: true});
       } catch (error: unknown) {
         if (error instanceof Error) {
           console.error(`Error compiling node ${nodeId}:`, error);
           state.addError(node, error.message, true);
+          state.updateNode(nodeId, {compiled: false});
           throw error;
         } else {
           console.error(`Unexpected error compiling node ${nodeId}:`, error);
           state.addError(node, 'Unexpected error', true);
+          state.updateNode(nodeId, {compiled: false});
           throw new Error('Unexpected error');
         }
       }
@@ -223,7 +225,7 @@ export function getAllConnectedNodes(nodeId: string): ExtendedNode[] {
       }
     });
   }
-
+  console.log(connectedNodes)
   return connectedNodes;
 }
 

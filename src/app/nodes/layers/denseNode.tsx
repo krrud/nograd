@@ -9,7 +9,7 @@ import * as tf from '@tensorflow/tfjs';
 import { isInputNodeData } from '@/app/nodes/layers/inputNode';
 
 
-export default function DenseNode({ id, isConnectable, data }: NodeProps<DenseNodeData>) {
+export default function DenseNode({id, data}: NodeProps<DenseNodeData>) {
   const state = useNodes.getState();
   const [inputShape, setInputShape] = useState<string>(data.inputShape.join(', '));
   const [activation, setActivation] = useState<string>(data.activation);
