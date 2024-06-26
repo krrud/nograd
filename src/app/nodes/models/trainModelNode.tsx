@@ -25,7 +25,7 @@ export default function TrainModelNode({id, data}: NodeProps<TrainModelNodeData>
   const prevNodeDataRef = useRef(nodeData);
   const prevEdgeDataRef = useRef(edgeData);
   
-  useEffect(() => { // set compiled to false if associated node data changes
+  useEffect(() => { // set compiled to false if any associated node data changes
     let dataChanged = false;
 
     if (!isEqual(prevNodeDataRef.current, nodeData)) {
@@ -83,6 +83,7 @@ export default function TrainModelNode({id, data}: NodeProps<TrainModelNodeData>
   );
 }
 
+
 export async function compileTrainModelNode(node: ExtendedNode) {
   console.log("Compiling Train Model Node: ", node.id);
   const state = useNodes.getState();
@@ -112,6 +113,8 @@ async function trainModel(nodeId: string) {
   const model = data.model;
   const x = data.x;
   const y = data.y;
+  const epochs = data.epochs;
+  const batchSize = data.batchSize;
 
   if (!model || !x || !y) {
     state.addError(node, 'Missing necessary inputs to train model.');
@@ -120,8 +123,8 @@ async function trainModel(nodeId: string) {
 
 try {
   await model.fit(x, y, {
-    epochs: data.epochs,
-    batchSize: data.batchSize,
+    epochs,
+    batchSize,
     callbacks: {
       onEpochEnd: async (epoch, logs) => {
         console.log(`Epoch ${epoch}: loss = ${logs?.loss}`);

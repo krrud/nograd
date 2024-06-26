@@ -218,14 +218,13 @@ export function getAllConnectedNodes(nodeId: string): ExtendedNode[] {
     if (!current) continue;
     connectedNodes.push(current);
 
-    // Reverse the search direction to find nodes upstream
+    // find upstream nodes
     edges.forEach(edge => {
       if (edge.target === currentId) {
         queue.push(edge.source);
       }
     });
   }
-  console.log(connectedNodes)
   return connectedNodes;
 }
 
